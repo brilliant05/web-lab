@@ -1,0 +1,1263 @@
+{
+  "info": {
+    "name": "大学生线上学习资源共享与问答系统 API",
+    "description": "提供课程管理、资源共享、在线问答等功能的RESTful API接口文档",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "web-lab-learning-system",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "一、认证授权",
+      "item": [
+        {
+          "name": "用户注册",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"student01\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\",\n  \"realName\": \"张三\",\n  \"email\": \"student01@example.com\",\n  \"phone\": \"13800138000\",\n  \"studentId\": \"2024001\",\n  \"college\": \"计算机学院\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "学生自主注册账号"
+          }
+        },
+        {
+          "name": "用户登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.code === 200 && response.data.token) {",
+                  "    pm.collectionVariables.set('token', response.data.token);",
+                  "    console.log('Token已保存:', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "用户登录,返回JWT Token,会自动保存到环境变量"
+          }
+        },
+        {
+          "name": "退出登录",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "退出登录"
+          }
+        },
+        {
+          "name": "修改密码",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"old123\",\n  \"newPassword\": \"new123\",\n  \"confirmPassword\": \"new123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "password"]
+            },
+            "description": "修改当前用户密码"
+          }
+        }
+      ]
+    },
+    {
+      "name": "二、用户管理",
+      "item": [
+        {
+          "name": "获取当前用户信息",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/current",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "current"]
+            },
+            "description": "获取当前登录用户的详细信息"
+          }
+        },
+        {
+          "name": "更新个人信息",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"realName\": \"张三\",\n  \"email\": \"newemail@example.com\",\n  \"phone\": \"13800138001\",\n  \"profile\": \"个人简介\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "更新当前用户个人信息"
+          }
+        },
+        {
+          "name": "上传头像",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/avatar",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "avatar"]
+            },
+            "description": "上传用户头像"
+          }
+        }
+      ]
+    },
+    {
+      "name": "三、课程管理",
+      "item": [
+        {
+          "name": "获取课程列表(分页)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses?pageNum=1&pageSize=10&keyword=Java&college=计算机学院",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1",
+                  "description": "页码"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10",
+                  "description": "每页条数"
+                },
+                {
+                  "key": "keyword",
+                  "value": "Java",
+                  "description": "搜索关键字"
+                },
+                {
+                  "key": "college",
+                  "value": "计算机学院",
+                  "description": "学院"
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": "状态(0-关闭,1-开放)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "分页查询课程列表,支持关键字搜索和筛选"
+          }
+        },
+        {
+          "name": "获取课程详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "1"]
+            },
+            "description": "根据课程ID获取课程详细信息"
+          }
+        },
+        {
+          "name": "创建课程(管理员)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseName\": \"Java程序设计\",\n  \"courseCode\": \"CS101\",\n  \"description\": \"课程描述\",\n  \"college\": \"计算机学院\",\n  \"coverImage\": \"https://...\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses"]
+            },
+            "description": "管理员创建新课程"
+          }
+        },
+        {
+          "name": "更新课程(管理员)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseName\": \"Java程序设计\",\n  \"courseCode\": \"CS101\",\n  \"description\": \"课程描述\",\n  \"college\": \"计算机学院\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "1"]
+            },
+            "description": "管理员更新课程信息"
+          }
+        },
+        {
+          "name": "删除课程(管理员)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "1"]
+            },
+            "description": "管理员删除课程"
+          }
+        },
+        {
+          "name": "为课程分配教师(管理员)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teacherId\": 2,\n  \"className\": \"2024级1班\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/1/teachers",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "1", "teachers"]
+            },
+            "description": "管理员为课程分配教师"
+          }
+        },
+        {
+          "name": "移除课程教师(管理员)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/1/teachers/2",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "1", "teachers", "2"]
+            },
+            "description": "管理员移除课程的某个教师"
+          }
+        },
+        {
+          "name": "获取我的课程列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/courses/my-courses?role=STUDENT",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "my-courses"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "STUDENT",
+                  "description": "STUDENT(学生选课) / TEACHER(教师授课)"
+                }
+              ]
+            },
+            "description": "获取当前用户的课程列表"
+          }
+        },
+        {
+          "name": "学生加入课程(邀请码)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inviteCode\": \"ABC123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courses/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["courses", "join"]
+            },
+            "description": "学生通过邀请码加入课程"
+          }
+        }
+      ]
+    },
+    {
+      "name": "四、学习资源",
+      "item": [
+        {
+          "name": "获取资源列表(分页)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources?pageNum=1&pageSize=10&courseId=1&keyword=Java&fileType=PDF&orderBy=createTime&orderDir=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "courseId",
+                  "value": "1"
+                },
+                {
+                  "key": "keyword",
+                  "value": "Java"
+                },
+                {
+                  "key": "fileType",
+                  "value": "PDF"
+                },
+                {
+                  "key": "orderBy",
+                  "value": "createTime",
+                  "description": "排序字段(createTime/downloadCount/viewCount)"
+                },
+                {
+                  "key": "orderDir",
+                  "value": "desc",
+                  "description": "排序方向(asc/desc)"
+                }
+              ]
+            },
+            "description": "分页查询学习资源列表"
+          }
+        },
+        {
+          "name": "获取资源详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "1"]
+            },
+            "description": "获取资源详细信息"
+          }
+        },
+        {
+          "name": "上传资源",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "resourceTitle",
+                  "value": "Java基础教程",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "资源描述",
+                  "type": "text"
+                },
+                {
+                  "key": "courseId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "visibility",
+                  "value": "PUBLIC",
+                  "type": "text",
+                  "description": "PUBLIC/COURSE_ONLY(仅教师可设置)"
+                },
+                {
+                  "key": "tags",
+                  "value": "基础,教程",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resources",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources"]
+            },
+            "description": "上传学习资源"
+          }
+        },
+        {
+          "name": "更新资源信息",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceTitle\": \"新标题\",\n  \"description\": \"新描述\",\n  \"tags\": \"新标签\",\n  \"visibility\": \"PUBLIC\",\n  \"isTop\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resources/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "1"]
+            },
+            "description": "更新资源信息"
+          }
+        },
+        {
+          "name": "删除资源",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "1"]
+            },
+            "description": "删除资源"
+          }
+        },
+        {
+          "name": "下载资源",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/1/download",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "1", "download"]
+            },
+            "description": "下载资源文件"
+          }
+        },
+        {
+          "name": "收藏资源",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/1/collect",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "1", "collect"]
+            },
+            "description": "收藏资源"
+          }
+        },
+        {
+          "name": "取消收藏",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/1/collect",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "1", "collect"]
+            },
+            "description": "取消收藏资源"
+          }
+        },
+        {
+          "name": "我的收藏列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/collections?pageNum=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "collections"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取我的收藏资源列表"
+          }
+        },
+        {
+          "name": "我上传的资源",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/my-uploads?pageNum=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "my-uploads"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "获取我上传的资源列表"
+          }
+        },
+        {
+          "name": "置顶资源(教师)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isTop\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resources/1/top",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "1", "top"]
+            },
+            "description": "教师设置资源置顶"
+          }
+        }
+      ]
+    },
+    {
+      "name": "五、问答管理",
+      "item": [
+        {
+          "name": "获取问题列表(分页)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions?pageNum=1&pageSize=10&courseId=1&teacherId=2&isAnswered=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "courseId",
+                  "value": "1"
+                },
+                {
+                  "key": "teacherId",
+                  "value": "2"
+                },
+                {
+                  "key": "isAnswered",
+                  "value": "1",
+                  "description": "0-未回答,1-已回答"
+                },
+                {
+                  "key": "keyword",
+                  "value": "多线程",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "分页查询问题列表"
+          }
+        },
+        {
+          "name": "获取问题详情",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions", "1"]
+            },
+            "description": "获取问题详情及所有回答"
+          }
+        },
+        {
+          "name": "提交问题(学生)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "questionTitle",
+                  "value": "Java多线程如何实现?",
+                  "type": "text"
+                },
+                {
+                  "key": "questionContent",
+                  "value": "问题详细内容...",
+                  "type": "text"
+                },
+                {
+                  "key": "courseId",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "teacherId",
+                  "value": "2",
+                  "type": "text",
+                  "description": "向哪位教师提问"
+                },
+                {
+                  "key": "tags",
+                  "value": "多线程,并发",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [],
+                  "description": "图片(最多3张)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/questions",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions"]
+            },
+            "description": "学生提交问题"
+          }
+        },
+        {
+          "name": "更新问题(学生)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionTitle\": \"新标题\",\n  \"questionContent\": \"新内容\",\n  \"tags\": \"新标签\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/questions/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions", "1"]
+            },
+            "description": "更新问题(仅未回答的问题)"
+          }
+        },
+        {
+          "name": "删除问题",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions", "1"]
+            },
+            "description": "删除问题"
+          }
+        },
+        {
+          "name": "我的提问列表(学生)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions/my-questions?pageNum=1&pageSize=10&isAnswered=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions", "my-questions"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "isAnswered",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "获取我的提问列表"
+          }
+        },
+        {
+          "name": "待回答问题列表(教师)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/questions/pending?pageNum=1&pageSize=10&courseId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions", "pending"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "courseId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "教师获取待回答的问题列表"
+          }
+        },
+        {
+          "name": "回答问题(教师)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "answerContent",
+                  "value": "回答内容...",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [],
+                  "description": "图片(最多5张)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/questions/1/answers",
+              "host": ["{{baseUrl}}"],
+              "path": ["questions", "1", "answers"]
+            },
+            "description": "教师回答问题"
+          }
+        },
+        {
+          "name": "更新回答(教师)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answerContent\": \"修改后的回答内容\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/answers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1"]
+            },
+            "description": "教师更新回答"
+          }
+        },
+        {
+          "name": "删除回答(教师)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1"]
+            },
+            "description": "教师删除回答"
+          }
+        },
+        {
+          "name": "我的回答列表(教师)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/my-answers?pageNum=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "my-answers"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "教师获取我的回答列表"
+          }
+        },
+        {
+          "name": "点赞回答",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/1/like",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1", "like"]
+            },
+            "description": "点赞回答"
+          }
+        },
+        {
+          "name": "取消点赞",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/1/like",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1", "like"]
+            },
+            "description": "取消点赞回答"
+          }
+        }
+      ]
+    },
+    {
+      "name": "六、通知管理",
+      "item": [
+        {
+          "name": "获取通知列表(分页)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?pageNum=1&pageSize=10&isRead=0&notificationType=ANSWER_REPLY",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                {
+                  "key": "pageNum",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "isRead",
+                  "value": "0",
+                  "description": "0-未读,1-已读"
+                },
+                {
+                  "key": "notificationType",
+                  "value": "ANSWER_REPLY",
+                  "description": "ANSWER_REPLY/RESOURCE_AUDIT/SYSTEM"
+                }
+              ]
+            },
+            "description": "获取通知列表"
+          }
+        },
+        {
+          "name": "获取未读通知数量",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "unread-count"]
+            },
+            "description": "获取未读通知数量"
+          }
+        },
+        {
+          "name": "标记通知已读",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/1/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "1", "read"]
+            },
+            "description": "标记单条通知已读"
+          }
+        },
+        {
+          "name": "标记全部已读",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "read-all"]
+            },
+            "description": "标记所有通知已读"
+          }
+        }
+      ]
+    },
+    {
+      "name": "七、管理员接口",
+      "item": [
+        {
+          "name": "教师管理",
+          "item": [
+            {
+              "name": "获取教师列表",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/teachers?pageNum=1&pageSize=10&keyword=李&jobTitle=教授",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "teachers"],
+                  "query": [
+                    {
+                      "key": "pageNum",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "10"
+                    },
+                    {
+                      "key": "keyword",
+                      "value": "李"
+                    },
+                    {
+                      "key": "jobTitle",
+                      "value": "教授"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "添加教师",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"teacher01\",\n  \"password\": \"123456\",\n  \"realName\": \"李老师\",\n  \"email\": \"teacher01@example.com\",\n  \"phone\": \"13800138000\",\n  \"jobTitle\": \"教授\",\n  \"profile\": \"个人简介\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/teachers",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "teachers"]
+                }
+              }
+            },
+            {
+              "name": "更新教师信息",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"realName\": \"李老师\",\n  \"email\": \"teacher01@example.com\",\n  \"jobTitle\": \"教授\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/teachers/2",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "teachers", "2"]
+                }
+              }
+            },
+            {
+              "name": "删除教师",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/teachers/2",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "teachers", "2"]
+                }
+              }
+            },
+            {
+              "name": "启用/禁用教师账号",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/teachers/2/status",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "teachers", "2", "status"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "学生管理",
+          "item": [
+            {
+              "name": "获取学生列表",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/students?pageNum=1&pageSize=10&keyword=张&college=计算机学院",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "students"],
+                  "query": [
+                    {
+                      "key": "pageNum",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "10"
+                    },
+                    {
+                      "key": "keyword",
+                      "value": "张"
+                    },
+                    {
+                      "key": "college",
+                      "value": "计算机学院"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "获取学生详情",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/students/3",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "students", "3"]
+                }
+              }
+            },
+            {
+              "name": "启用/禁用学生账号",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/students/3/status",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "students", "3", "status"]
+                }
+              }
+            },
+            {
+              "name": "删除学生",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/students/3",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "students", "3"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "系统统计",
+          "item": [
+            {
+              "name": "获取系统概览数据",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/statistics/overview",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "statistics", "overview"]
+                }
+              }
+            },
+            {
+              "name": "获取用户增长趋势",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/statistics/user-growth?days=30",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["admin", "statistics", "user-growth"],
+                  "query": [
+                    {
+                      "key": "days",
+                      "value": "30"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

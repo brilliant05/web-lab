@@ -2,6 +2,8 @@ package com.boda.springboot.handler;
 
 
 import com.boda.springboot.common.Result;
+import com.boda.springboot.exception.NotLoginException;
+import com.boda.springboot.exception.PermissionException;
 import com.boda.springboot.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,9 +24,27 @@ public class GlobalExceptionHandler {
         }
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public Result<?> runtimeExceptionHandler(RuntimeException ex){
+        log.error("运行时异常: {}", ex.getMessage(), ex);
+        return Result.error(ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public Result<?> globalExceptionHandler(Exception ex){
         log.error("系统异常: {}", ex.getMessage(), ex);
         return Result.serverError("服务器内部错误");
+    }
+
+    @ExceptionHandler(PermissionException.class)
+    public Result<?> permissionExceptionHandler(PermissionException ex) {
+        log.error("权限异常: {}", ex.getMessage());
+        return Result.forbidden(ex.getMessage());
+    }
+
+    @ExceptionHandler(NotLoginException.class)
+    public Result<?> notLoginExceptionHandler(NotLoginException ex) {
+        log.error("未登录异常: {}", ex.getMessage());
+        return Result.unauthorized(ex.getMessage());
     }
 }

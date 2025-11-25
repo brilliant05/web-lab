@@ -6,13 +6,13 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-      vue(),
-      AutoImport({
-          resolvers: [ElementPlusResolver()],
-      }),
-      Components({
-          resolvers: [ElementPlusResolver()],
-      }),
-  ],
+    plugins: [
+        vue(),
+        AutoImport({
+            resolvers: [ElementPlusResolver()],
+        }),
+        Components({
+            resolvers: [ElementPlusResolver()],
+        }),
+    ],
 })

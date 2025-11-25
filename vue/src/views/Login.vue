@@ -6,36 +6,38 @@
         :class="['container', 'a-container', { 'is-txl': isSignUpMode }]"
       >
         <form class="form" @submit.prevent="handleRegister">
-          <h2 class="form_title title">Create Account</h2>
-          <div class="form__icons">
-            <img class="form__icon" :src="icons.facebook" alt="facebook" />
-            <img class="form__icon" :src="icons.linkedin" alt="linkedin" />
-            <img class="form__icon" :src="icons.twitter" alt="twitter" />
-          </div>
-          <span class="form__span">or use email for registration</span>
+          <h2 class="form_title title">创建你的账户</h2>
+          <span class="form__span">使用用户名创建</span>
           <input
             v-model="registerForm.name"
             class="form__input"
             type="text"
-            placeholder="Name"
+            placeholder="用户名"
             required
           />
           <input
-            v-model="registerForm.email"
-            class="form__input"
-            type="email"
-            placeholder="Email"
-            required
+              v-model="registerForm.name"
+              class="form__input"
+              type="text"
+              placeholder="学号/工号"
+              required
           />
           <input
             v-model="registerForm.password"
             class="form__input"
             type="password"
-            placeholder="Password"
+            placeholder="密码"
             required
           />
+          <input
+              v-model="registerForm.password"
+              class="form__input"
+              type="password"
+              placeholder="重新确认您的密码"
+              required
+          />
           <button class="form__button button submit" type="submit">
-            SIGN UP
+            现在开始！
           </button>
         </form>
       </div>
@@ -49,30 +51,25 @@
         ]"
       >
         <form class="form" @submit.prevent="handleLogin">
-          <h2 class="form_title title">Sign in to Website</h2>
-          <div class="form__icons">
-            <img class="form__icon" :src="icons.facebook" alt="facebook" />
-            <img class="form__icon" :src="icons.linkedin" alt="linkedin" />
-            <img class="form__icon" :src="icons.twitter" alt="twitter" />
-          </div>
-          <span class="form__span">or use your email account</span>
+          <h2 class="form_title title">欢迎登录</h2>
+          <span class="form__span">使用用户名开始吧！</span>
           <input
             v-model="loginForm.email"
             class="form__input"
-            type="email"
-            placeholder="Email"
+            type="text"
+            placeholder="用户名"
             required
           />
           <input
             v-model="loginForm.password"
             class="form__input"
             type="password"
-            placeholder="Password"
+            placeholder="密码"
             required
           />
-          <a class="form__link" href="#">Forgot your password?</a>
+          <a class="form__link" href="#">忘记密码？</a>
           <button class="form__button button submit" type="submit">
-            SIGN IN
+            现在开始！
           </button>
         </form>
       </div>
@@ -98,12 +95,12 @@
             !isSignUpMode ? 'is-visible' : 'is-hidden'
           ]"
         >
-          <h2 class="switch__title title">Welcome Back !</h2>
+          <h2 class="switch__title title">欢迎回来！</h2>
           <p class="switch__description description">
-            To keep connected with us please login with your personal info
+            使用您的个人信息登录，欢迎与我们联系！
           </p>
           <button class="switch__button button switch-btn" @click="toggleMode">
-            SIGN IN
+            登录
           </button>
         </div>
         <div
@@ -113,12 +110,12 @@
             isSignUpMode ? 'is-visible' : 'is-hidden'
           ]"
         >
-          <h2 class="switch__title title">Hello Friend !</h2>
+          <h2 class="switch__title title">同学(老师)你好！</h2>
           <p class="switch__description description">
-            Enter your personal details and start journey with us
+            输入您的个人信息，与我们一起开始旅程
           </p>
           <button class="switch__button button switch-btn" @click="toggleMode">
-            SIGN UP
+            注册
           </button>
         </div>
       </div>

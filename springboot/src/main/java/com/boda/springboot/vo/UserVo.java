@@ -1,5 +1,6 @@
 package com.boda.springboot.vo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,10 +8,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserVo {
     private Long userId;
     private String username;
     private String realName;
     private String role;
     private String avatarUrl;
+
 }

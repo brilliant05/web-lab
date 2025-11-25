@@ -1,6 +1,8 @@
 package com.boda.springboot.service.imp;
 
+import com.boda.springboot.common.Constant;
 import com.boda.springboot.dto.LoginRequest;
+import com.boda.springboot.dto.UpdatePassword;
 import com.boda.springboot.entity.User;
 import com.boda.springboot.exception.ServiceException;
 import com.boda.springboot.mapper.UserMapper;
@@ -42,7 +44,70 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public User selectByUsername(String username) {
-        return userMapper.selectByUsername(username);
+    public void saveStudent(User user) {
+        // 检查用户名是否已存在
+        if (existsByUsername(user.getUsername())) {
+            throw new ServiceException("400", "用户名已存在");
+        }
+        // 加密密码
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // 设置角色为学生
+        user.setRole(Constant.ROLE_STUDENT);
+
+        userMapper.save(user);
+    }
+
+    @Override
+    public void updatePassword(UpdatePassword updatePassword) {
+        // 1. 查询用户是否存在
+        User user = userMapper.selectByUsername(updatePassword.getUsername());
+        if (user == null) {
+            throw new ServiceException("404", "用户不存在");
+        }
+
+        // 2. 验证原密码是否正确
+        if (!passwordEncoder.matches(updatePassword.getOldPassword(), user.getPassword())) {
+            throw new ServiceException("400", "原密码错误");
+        }
+
+        // 3. 加密新密码
+        String newEncodedPassword = passwordEncoder.encode(updatePassword.getNewPassword());
+
+        // 4. 更新密码
+        userMapper.updatePassword(user.getUserId(), newEncodedPassword);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        User user = userMapper.selectByUsername(username);
+        return user != null;
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        User user = userMapper.selectByEmail(email);
+        return user != null;
+    }
+
+    /**
+     * 重置密码
+     * @param updatePassword
+     */
+    @Override
+    public void resetPassword(UpdatePassword updatePassword) {
+        // 1. 查询用户是否存在
+        User user = userMapper.selectByUsername(updatePassword.getUsername());
+        if (user == null) {
+            throw new ServiceException("404", "用户不存在");
+        }
+        // 验证是否和原密码相同
+        if (passwordEncoder.matches(updatePassword.getNewPassword(), user.getPassword())) {
+            throw new ServiceException("400", "新密码不能与原密码相同");
+        }
+        // 2. 加密新密码
+        String newEncodedPassword = passwordEncoder.encode(updatePassword.getNewPassword());
+
+        // 3. 更新密码
+        userMapper.updatePassword(user.getUserId(), newEncodedPassword);
     }
 }

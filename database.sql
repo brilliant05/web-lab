@@ -29,8 +29,8 @@ CREATE TABLE `user` (
   `user_id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户ID,主键',
   `username` VARCHAR(50) NOT NULL COMMENT '用户名,唯一',
   `password` VARCHAR(255) NOT NULL COMMENT '密码(BCrypt加密)',
-  `real_name` VARCHAR(50) NOT NULL COMMENT '真实姓名',
-  `email` VARCHAR(100) NOT NULL COMMENT '邮箱,唯一',
+  `real_name` VARCHAR(50)   COMMENT '真实姓名',
+  `email` VARCHAR(100)  COMMENT '邮箱,唯一',
   `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
   `avatar_url` VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
   `role` VARCHAR(20) NOT NULL COMMENT '角色: ADMIN-管理员, TEACHER-教师, STUDENT-学生',
@@ -301,7 +301,7 @@ INSERT INTO `user` (
   `status`
 ) VALUES (
   'admin',
-  '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi',
+  '$2a$10$1CAWdko5zIgj3QjGuMeWJeaghW8QoktRPYHQXQ/b5TQGfLmLby6ue',
   '系统管理员',
   'admin@example.com',
   'ADMIN',

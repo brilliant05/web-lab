@@ -28,7 +28,7 @@ public class AuthController {
     @PostMapping("/login")
     public Result<LoginData> login(@RequestBody LoginRequest req) {
         log.info("登录请求: username={}", req.getUsername());
-        // 不要对前端传来的明文密码进行二次加密，这会导致校验失败
+        // 不对前端传来的明文密码进行二次加密，这会导致校验失败
         User userInfo = userService.login(req);
         // 生成 JWT Token（包含用户ID、用户名、角色）
         String token = jwtUtil.generateToken(userInfo.getUserId(), userInfo.getUsername(), userInfo.getRole());

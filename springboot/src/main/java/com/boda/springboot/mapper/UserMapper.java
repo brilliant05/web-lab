@@ -13,7 +13,7 @@ public interface UserMapper {
      * @param username
      * @return
      */
-    @Select("SELECT * FROM user WHERE username = #{username}")
+    @Select("SELECT * FROM user WHERE username = #{username} and is_deleted = 0")
     User selectByUsername(String username);
 
     /**
@@ -37,4 +37,9 @@ public interface UserMapper {
      */
     @Update("UPDATE user SET password = #{newPassword}, update_time = NOW() WHERE user_id = #{userId}")
     void updatePassword(@Param("userId") Long userId, @Param("newPassword") String newPassword);
+    /**
+     * 更新用户信息
+     * @param user
+     */
+    void update(User user);
 }

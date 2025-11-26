@@ -775,8 +775,6 @@ POST /api/v1/admin/teachers
     "username": "teacher01",
     "password": "123456",
     "realName": "李老师",
-    "email": "teacher01@example.com",
-    "phone": "13800138000",
     "jobTitle": "教授",
     "profile": "个人简介"
 }

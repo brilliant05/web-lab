@@ -1,45 +1,27 @@
 package com.boda.springboot.service;
 
-import com.boda.springboot.dto.LoginRequest;
-import com.boda.springboot.dto.UpdatePassword;
+import com.boda.springboot.dto.UserInfoUpdateDTO;
 import com.boda.springboot.entity.User;
 
 public interface UserService {
-   /**
-    * 用户登录
-    * @param user
-    * @return
-    */
-   User login(LoginRequest user);
+    /**
+     * 根据用户ID查询用户信息
+     * @param userId
+     * @return
+     */
+    User selectById(Long userId);
 
-   /**
-    * 用户注册信息保存
-    * @param user
-    */
-   void saveStudent(User user);
-
-   /**
-    * 修改密码
-    * @param updatePassword
-    */
-   void updatePassword(UpdatePassword updatePassword);
-
-   /**
-    * 检查用户名是否存在
-    * @param username
-    * @return
-    */
-   boolean existsByUsername(String username);
-
-   /**
-    * 检查邮箱是否存在
-    * @param email
-    * @return
-    */
-   boolean existsByEmail(String email);
-   /**
-    * 重置密码
-    * @param updatePassword
-    */
-   void resetPassword(UpdatePassword updatePassword);
+    /**
+     * 根据用户ID和角色查询用户信息
+     * @param userId
+     * @param role
+     * @return
+     */
+    User selectByIdAndRole(Long userId, String role);
+    /**
+     * 更新用户信息
+     * @param userId
+     * @param userInfoUpdateDTO
+     */
+    void updateUserInfo(Long userId, UserInfoUpdateDTO userInfoUpdateDTO);
 }

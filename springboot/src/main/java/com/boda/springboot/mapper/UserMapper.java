@@ -17,10 +17,25 @@ public interface UserMapper {
     User selectByUsername(String username);
 
     /**
-     * 根据邮箱查询用户信息
-     * @param email
+     * 根据用户ID查询用户信息
+     * @param userId
      * @return
      */
+    @Select("SELECT * FROM user WHERE user_id = #{userId} and is_deleted = 0")
+    User selectById(Long userId);
+    /**
+     * 根据id查询学生信息
+     * @param userId
+     * @return
+     */
+    @Select("SELECT username,real_name,email,phone,avatar_url,student_id,college,profile,role FROM user WHERE user_id = #{userId} AND role = 'STUDENT' and is_deleted = 0")
+    User selectStudentById(Long userId);
+    /**
+     * 根据id查询教师信息
+     * @param userId
+     * @return
+     */    @Select("SELECT username,real_name,email,phone,avatar_url,job_title,college,profile,role FROM user WHERE user_id = #{userId} AND role = 'TEACHER' and is_deleted = 0")
+    User selectTeacherById(Long userId);
     @Select("SELECT * FROM user WHERE email = #{email}")
     User selectByEmail(String email);
 

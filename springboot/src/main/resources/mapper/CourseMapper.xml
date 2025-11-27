@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boda.springboot.mapper.CourseMapper">
+
+    <!-- 动态插入课程信息 -->
+    <insert id="save"
+            parameterType="com.boda.springboot.entity.Course"
+            useGeneratedKeys="true"
+            keyProperty="courseId">
+        INSERT INTO course (
+            course_name,
+            course_code,
+            college
+            <if test="description != null">, description</if>
+            <if test="coverImage != null">, cover_image</if>
+            <if test="status != null">, status</if>
+            <if test="createTime != null">, create_time</if>
+            <if test="updateTime != null">, update_time</if>
+            <if test="isDeleted != null">, is_deleted</if>
+        )
+        VALUES (
+            #{courseName},
+            #{courseCode},
+            #{college}
+            <if test="description != null">, #{description}</if>
+            <if test="coverImage != null">, #{coverImage}</if>
+            <if test="status != null">, #{status}</if>
+            <if test="createTime != null">, #{createTime}</if>
+            <if test="updateTime != null">, #{updateTime}</if>
+            <if test="isDeleted != null">, #{isDeleted}</if>
+        )
+    </insert>
+
+    <!-- 分页查询课程列表 -->
+    <select id="pageQuery" resultType="com.boda.springboot.entity.Course">
+        SELECT
+            course_id,
+            course_name,
+            course_code,
+            description,
+            college,
+            cover_image,
+            status,
+            create_time
+        FROM course
+        WHERE is_deleted = 0
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="courseName != null and courseName != ''">
+            AND course_name LIKE CONCAT('%', #{courseName}, '%')
+        </if>
+        <if test="courseCode != null and courseCode != ''">
+            AND course_code LIKE CONCAT('%', #{courseCode}, '%')
+        </if>
+        <if test="college != null and college != ''">
+            AND college LIKE CONCAT('%', #{college}, '%')
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 动态更新课程信息 -->
+    <update id="update" parameterType="com.boda.springboot.entity.Course">
+        UPDATE course
+        <set>
+            <if test="courseName != null and courseName != ''">course_name = #{courseName},</if>
+            <if test="courseCode != null and courseCode != ''">course_code = #{courseCode},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="college != null and college != ''">college = #{college},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE course_id = #{courseId}
+        AND is_deleted = 0
+    </update>
+
+</mapper>

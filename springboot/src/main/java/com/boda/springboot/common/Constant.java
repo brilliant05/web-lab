@@ -13,5 +13,7 @@ public class Constant {
     public final static Integer STATUS_DISABLE = 0;
     public final static Integer DELETE_IS = 1;
     public final static Integer DELETE_NO = 0;
+    public final static Integer COURSE_OPEN = 1;
+    public final static Integer COURSE_CLOSE = 0;
 
 }

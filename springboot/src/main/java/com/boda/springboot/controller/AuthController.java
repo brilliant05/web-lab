@@ -5,7 +5,7 @@ import com.boda.springboot.dto.LoginData;
 import com.boda.springboot.dto.LoginRequest;
 import com.boda.springboot.dto.UpdatePassword;
 import com.boda.springboot.entity.User;
-import com.boda.springboot.service.UserService;
+import com.boda.springboot.service.AuthService;
 import com.boda.springboot.utils.JwtUtil;
 import com.boda.springboot.vo.UserVo;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ public class AuthController {
     @Autowired
     JwtUtil jwtUtil;
     @Autowired
-    UserService userService;
+    AuthService authService;
 
     /**
      * 登录
@@ -33,7 +33,7 @@ public class AuthController {
     public Result<LoginData> login(@RequestBody LoginRequest req) {
         log.info("登录请求: username={}", req.getUsername());
         // 不对前端传来的明文密码进行二次加密，这会导致校验失败
-        User userInfo = userService.login(req);
+        User userInfo = authService.login(req);
         // 生成 JWT Token（包含用户ID、用户名、角色）
         String token = jwtUtil.generateToken(userInfo.getUserId(), userInfo.getUsername(), userInfo.getRole());
         UserVo userVo = new UserVo();
@@ -62,7 +62,7 @@ public class AuthController {
             return Result.error("密码长度不能少于6位");
         }
 
-        userService.saveStudent(user);
+        authService.saveStudent(user);
         return Result.success("注册成功");
     }
 
@@ -112,7 +112,7 @@ public class AuthController {
 
         // 设置用户名并调用服务层修改密码
         updatePassword.setUsername(username);
-        userService.updatePassword(updatePassword);
+        authService.updatePassword(updatePassword);
         return Result.success("密码修改成功");
     }
 
@@ -142,7 +142,7 @@ public class AuthController {
         }
         // 设置用户名并调用服务层修改密码
         updatePassword.setUsername(username);
-        userService.resetPassword(updatePassword);
+        authService.resetPassword(updatePassword);
         return Result.success("密码重置成功");
     }
 }

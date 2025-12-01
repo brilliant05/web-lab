@@ -1,4 +1,4 @@
-package com.boda.springboot.service.imp;
+package com.boda.springboot.service.impl;
 
 import com.boda.springboot.dto.UserInfoUpdateDTO;
 import com.boda.springboot.entity.User;

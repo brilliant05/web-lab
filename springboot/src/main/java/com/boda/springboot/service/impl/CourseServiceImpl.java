@@ -1,4 +1,4 @@
-package com.boda.springboot.service.imp;
+package com.boda.springboot.service.impl;
 
 import com.boda.springboot.common.PageResult;
 import com.boda.springboot.dto.CoursePageQueryDTO;

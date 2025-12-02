@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boda.springboot.mapper.NotificationMapper">
+
+    <!-- 插入通知 -->
+    <insert id="save" parameterType="com.boda.springboot.entity.Notification" useGeneratedKeys="true" keyProperty="notificationId">
+        INSERT INTO notification (
+            user_id,
+            notification_type,
+            title,
+            content,
+            related_id,
+            related_type,
+            is_read,
+            create_time
+        ) VALUES (
+            #{userId},
+            #{notificationType},
+            #{title},
+            #{content},
+            #{relatedId},
+            #{relatedType},
+            0,
+            NOW()
+        )
+    </insert>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultType="com.boda.springboot.entity.Notification">
+        SELECT * FROM notification
+        WHERE notification_id = #{notificationId}
+    </select>
+
+    <!-- 分页查询通知列表 -->
+    <select id="selectPageList" resultType="com.boda.springboot.vo.NotificationVO">
+        SELECT
+            notification_id,
+            user_id,
+            notification_type,
+            title,
+            content,
+            related_id,
+            related_type,
+            is_read,
+            create_time,
+            read_time
+        FROM notification
+        WHERE user_id = #{userId}
+        <if test="isRead != null">
+            AND is_read = #{isRead}
+        </if>
+        <if test="notificationType != null and notificationType != ''">
+            AND notification_type = #{notificationType}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询未读通知数量 -->
+    <select id="countUnread" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM notification
+        WHERE user_id = #{userId} AND is_read = 0
+    </select>
+
+    <!-- 标记通知已读 -->
+    <update id="markAsRead">
+        UPDATE notification
+        SET is_read = 1, read_time = NOW()
+        WHERE notification_id = #{notificationId}
+    </update>
+
+    <!-- 标记所有通知已读 -->
+    <update id="markAllAsRead">
+        UPDATE notification
+        SET is_read = 1, read_time = NOW()
+        WHERE user_id = #{userId} AND is_read = 0
+    </update>
+
+    <!-- 删除过期通知 -->
+    <delete id="deleteExpired">
+        DELETE FROM notification
+        WHERE create_time &lt; DATE_SUB(NOW(), INTERVAL #{days} DAY)
+    </delete>
+
+</mapper>
+

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boda.springboot.mapper.AnswerMapper">
+
+    <!-- 插入回答 -->
+    <insert id="save" parameterType="com.boda.springboot.entity.Answer" useGeneratedKeys="true" keyProperty="answerId">
+        INSERT INTO answer (
+            question_id,
+            teacher_id,
+            answer_content,
+            image_urls,
+            like_count,
+            create_time,
+            update_time,
+            is_deleted
+        ) VALUES (
+            #{questionId},
+            #{teacherId},
+            #{answerContent},
+            #{imageUrls},
+            0,
+            NOW(),
+            NOW(),
+            0
+        )
+    </insert>
+
+    <!-- 更新回答 -->
+    <update id="update" parameterType="com.boda.springboot.entity.Answer">
+        UPDATE answer
+        <set>
+            <if test="answerContent != null">answer_content = #{answerContent},</if>
+            update_time = NOW()
+        </set>
+        WHERE answer_id = #{answerId} AND is_deleted = 0
+    </update>
+
+    <!-- 逻辑删除 -->
+    <update id="deleteById">
+        UPDATE answer SET is_deleted = 1, update_time = NOW()
+        WHERE answer_id = #{answerId}
+    </update>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultType="com.boda.springboot.entity.Answer">
+        SELECT * FROM answer
+        WHERE answer_id = #{answerId} AND is_deleted = 0
+    </select>
+
+    <!-- 根据问题ID查询所有回答 -->
+    <select id="selectByQuestionId" resultType="com.boda.springboot.vo.AnswerVO">
+        SELECT
+            a.answer_id,
+            a.question_id,
+            a.teacher_id,
+            u.real_name AS teacher_name,
+            u.avatar_url AS teacher_avatar,
+            u.job_title,
+            a.answer_content,
+            a.image_urls,
+            a.like_count,
+            a.create_time,
+            a.update_time,
+            CASE WHEN al.id IS NOT NULL THEN 1 ELSE 0 END AS is_liked
+        FROM answer a
+        LEFT JOIN user u ON a.teacher_id = u.user_id
+        LEFT JOIN answer_like al ON a.answer_id = al.answer_id AND al.user_id = #{currentUserId}
+        WHERE a.question_id = #{questionId} AND a.is_deleted = 0
+        ORDER BY a.create_time ASC
+    </select>
+
+    <!-- 查询教师的所有回答 -->
+    <select id="selectByTeacherId" resultType="com.boda.springboot.vo.AnswerVO">
+        SELECT
+            a.answer_id,
+            a.question_id,
+            a.teacher_id,
+            u.real_name AS teacher_name,
+            u.avatar_url AS teacher_avatar,
+            u.job_title,
+            a.answer_content,
+            a.image_urls,
+            a.like_count,
+            a.create_time,
+            a.update_time
+        FROM answer a
+        LEFT JOIN user u ON a.teacher_id = u.user_id
+        WHERE a.teacher_id = #{teacherId} AND a.is_deleted = 0
+        ORDER BY a.create_time DESC
+    </select>
+
+    <!-- 增加点赞数 -->
+    <update id="increaseLikeCount">
+        UPDATE answer
+        SET like_count = like_count + 1
+        WHERE answer_id = #{answerId}
+    </update>
+
+    <!-- 减少点赞数 -->
+    <update id="decreaseLikeCount">
+        UPDATE answer
+        SET like_count = like_count - 1
+        WHERE answer_id = #{answerId} AND like_count > 0
+    </update>
+
+</mapper>
+

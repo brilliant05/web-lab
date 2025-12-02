@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boda.springboot.mapper.QuestionMapper">
+
+    <!-- 插入问题 -->
+    <insert id="save" parameterType="com.boda.springboot.entity.Question" useGeneratedKeys="true" keyProperty="questionId">
+        INSERT INTO question (
+            course_id,
+            student_id,
+            teacher_id,
+            question_title,
+            question_content
+            <if test="imageUrls != null">,image_urls</if>
+            <if test="tags != null">,tags</if>
+        ) VALUES (
+            #{courseId},
+            #{studentId},
+            #{teacherId},
+            #{questionTitle},
+            #{questionContent}
+            <if test="imageUrls != null">,#{imageUrls}</if>
+            <if test="tags != null">,#{tags}</if>
+        )
+    </insert>
+
+    <!-- 更新问题 -->
+    <update id="update" parameterType="com.boda.springboot.entity.Question">
+        UPDATE question
+        <set>
+            <if test="questionTitle != null">question_title = #{questionTitle},</if>
+            <if test="questionContent != null">question_content = #{questionContent},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            update_time = NOW()
+        </set>
+        WHERE question_id = #{questionId} AND is_deleted = 0
+    </update>
+
+    <!-- 逻辑删除 -->
+    <update id="deleteById">
+        UPDATE question SET is_deleted = 1, update_time = NOW()
+        WHERE question_id = #{questionId}
+    </update>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultType="com.boda.springboot.entity.Question">
+        SELECT * FROM question
+        WHERE question_id = #{questionId} AND is_deleted = 0
+    </select>
+
+    <!-- 分页查询问题列表 -->
+    <select id="selectPageList" resultType="com.boda.springboot.vo.QuestionVO">
+        SELECT
+            q.question_id,
+            q.course_id,
+            c.course_name,
+            q.student_id,
+            s.real_name AS student_name,
+            q.teacher_id,
+            t.real_name AS teacher_name,
+            q.question_title,
+            q.question_content,
+            q.image_urls,
+            q.tags,
+            q.view_count,
+            q.answer_count,
+            q.is_answered,
+            q.status,
+            q.create_time,
+            q.update_time
+        FROM question q
+        LEFT JOIN course c ON q.course_id = c.course_id
+        LEFT JOIN user s ON q.student_id = s.user_id
+        LEFT JOIN user t ON q.teacher_id = t.user_id
+        WHERE q.is_deleted = 0 AND q.status = 1
+        <if test="courseId != null">
+            AND q.course_id = #{courseId}
+        </if>
+        <if test="teacherId != null">
+            AND q.teacher_id = #{teacherId}
+        </if>
+        <if test="isAnswered != null">
+            AND q.is_answered = #{isAnswered}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                q.question_title LIKE CONCAT('%', #{keyword}, '%')
+                OR q.question_content LIKE CONCAT('%', #{keyword}, '%')
+                OR q.tags LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        ORDER BY q.create_time DESC
+    </select>
+
+    <!-- 查询我的提问列表 -->
+    <select id="selectMyQuestions" resultType="com.boda.springboot.vo.QuestionVO">
+        SELECT
+            q.question_id,
+            q.course_id,
+            c.course_name,
+            q.student_id,
+            s.real_name AS student_name,
+            q.teacher_id,
+            t.real_name AS teacher_name,
+            q.question_title,
+            q.question_content,
+            q.image_urls,
+            q.tags,
+            q.view_count,
+            q.answer_count,
+            q.is_answered,
+            q.status,
+            q.create_time,
+            q.update_time
+        FROM question q
+        LEFT JOIN course c ON q.course_id = c.course_id
+        LEFT JOIN user s ON q.student_id = s.user_id
+        LEFT JOIN user t ON q.teacher_id = t.user_id
+        WHERE q.is_deleted = 0 AND q.student_id = #{studentId}
+        <if test="isAnswered != null">
+            AND q.is_answered = #{isAnswered}
+        </if>
+        ORDER BY q.create_time DESC
+    </select>
+
+    <!-- 查询教师待回答问题列表 -->
+    <select id="selectPendingQuestions" resultType="com.boda.springboot.vo.QuestionVO">
+        SELECT
+            q.question_id,
+            q.course_id,
+            c.course_name,
+            q.student_id,
+            s.real_name AS student_name,
+            q.teacher_id,
+            t.real_name AS teacher_name,
+            q.question_title,
+            q.question_content,
+            q.image_urls,
+            q.tags,
+            q.view_count,
+            q.answer_count,
+            q.is_answered,
+            q.status,
+            q.create_time,
+            q.update_time
+        FROM question q
+        LEFT JOIN course c ON q.course_id = c.course_id
+        LEFT JOIN user s ON q.student_id = s.user_id
+        LEFT JOIN user t ON q.teacher_id = t.user_id
+        WHERE q.is_deleted = 0
+          AND q.teacher_id = #{teacherId}
+          AND q.is_answered = 0
+          AND q.status = 1
+        <if test="courseId != null">
+            AND q.course_id = #{courseId}
+        </if>
+        ORDER BY q.create_time ASC
+    </select>
+
+    <!-- 查询问题详情 -->
+    <select id="selectDetailById" resultType="com.boda.springboot.vo.QuestionDetailVO">
+        SELECT
+            q.question_id,
+            q.course_id,
+            c.course_name,
+            q.student_id,
+            s.real_name AS student_name,
+            s.avatar_url AS student_avatar,
+            q.teacher_id,
+            t.real_name AS teacher_name,
+            q.question_title,
+            q.question_content,
+            q.image_urls,
+            q.tags,
+            q.view_count,
+            q.answer_count,
+            q.is_answered,
+            q.status,
+            q.create_time
+        FROM question q
+        LEFT JOIN course c ON q.course_id = c.course_id
+        LEFT JOIN user s ON q.student_id = s.user_id
+        LEFT JOIN user t ON q.teacher_id = t.user_id
+        WHERE q.question_id = #{questionId} AND q.is_deleted = 0
+    </select>
+
+    <!-- 增加浏览次数 -->
+    <update id="increaseViewCount">
+        UPDATE question
+        SET view_count = view_count + 1
+        WHERE question_id = #{questionId}
+    </update>
+
+    <!-- 增加回答数量 -->
+    <update id="increaseAnswerCount">
+        UPDATE question
+        SET answer_count = answer_count + 1
+        WHERE question_id = #{questionId}
+    </update>
+
+    <!-- 减少回答数量 -->
+    <update id="decreaseAnswerCount">
+        UPDATE question
+        SET answer_count = answer_count - 1
+        WHERE question_id = #{questionId} AND answer_count > 0
+    </update>
+
+    <!-- 更新回答状态 -->
+    <update id="updateAnsweredStatus">
+        UPDATE question
+        SET is_answered = #{isAnswered}, update_time = NOW()
+        WHERE question_id = #{questionId}
+    </update>
+
+</mapper>
+

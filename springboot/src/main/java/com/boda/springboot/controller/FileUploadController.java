@@ -29,9 +29,10 @@ public class FileUploadController {
      *
      * @param file 上传的文件
      * @return 上传结果（包含文件URL）
+     *
+     * 权限：所有登录用户
      */
     @PostMapping
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         log.info("接收到文件上传请求 - 文件名: {}, 大小: {} bytes",
                 file.getOriginalFilename(), file.getSize());
@@ -86,9 +87,10 @@ public class FileUploadController {
      *
      * @param file 上传的图片文件
      * @return 上传结果
+     *
+     * 权限：所有登录用户
      */
     @PostMapping("/image")
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         log.info("接收到图片上传请求 - 文件名: {}", file.getOriginalFilename());
 
@@ -214,9 +216,10 @@ public class FileUploadController {
      *
      * @param file 头像图片
      * @return 上传结果（包含文件URL、文件Key等信息）
+     *
+     * 权限：所有登录用户
      */
     @PostMapping("/avatar")
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<Map<String, String>> uploadAvatar(@RequestParam("file") MultipartFile file) {
         log.info("接收到头像上传请求 - 文件名: {}", file.getOriginalFilename());
 

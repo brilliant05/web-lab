@@ -7,7 +7,6 @@ import com.qiniu.http.Response;
 import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
-import com.qiniu.storage.model.DefaultPutRet;
 import com.qiniu.util.Auth;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -216,5 +217,66 @@ public class QiNiuUtil {
 
         return datePath + "/" + UUID.randomUUID().toString().replace("-", "") + extension;
     }
-}
 
+    /**
+     * 批量上传图片到七牛云（带类型校验）
+     *
+     * @param images 图片文件数组
+     * @param type   文件类型前缀（如 "question"、"answer"、"resource"）
+     * @return 逗号分隔的图片 URL 字符串，如果没有图片则返回 null
+     * @throws IOException 上传失败时抛出异常
+     */
+    public String uploadImages(MultipartFile[] images, String type) throws IOException {
+        if (images == null || images.length == 0) {
+            return null;
+        }
+
+        List<String> urls = new ArrayList<>();
+        for (MultipartFile image : images) {
+            // 1. 校验图片类型
+            FileTypeValidator.validateImageType(image);
+
+            // 2. 生成文件名
+            String fileName = type + "/" + generateUniqueFileName(image.getOriginalFilename());
+
+            // 3. 上传到七牛云
+            String url = uploadFile(image, fileName);
+            urls.add(url);
+        }
+
+        return String.join(",", urls);
+    }
+
+    /**
+     * 批量上传图片到七牛云（不校验类型）
+     *
+     * @param images 图片文件数组
+     * @param type   文件类型前缀
+     * @return 逗号分隔的图片 URL 字符串
+     * @throws IOException 上传失败时抛出异常
+     */
+    public String uploadImagesWithoutValidation(MultipartFile[] images, String type) throws IOException {
+        if (images == null || images.length == 0) {
+            return null;
+        }
+
+        List<String> urls = new ArrayList<>();
+        for (MultipartFile image : images) {
+            String fileName = type + "/" + generateUniqueFileName(image.getOriginalFilename());
+            String url = uploadFile(image, fileName);
+            urls.add(url);
+        }
+
+        return String.join(",", urls);
+    }
+
+    /**
+     * 七牛云上传响应结果类
+     */
+    private static class DefaultPutRet {
+        public String key;
+        public String hash;
+        public String bucket;
+        public String fsize;
+    }
+}

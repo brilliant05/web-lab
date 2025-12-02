@@ -77,4 +77,30 @@
         AND is_deleted = 0
     </update>
 
+    <!-- 查询教师的课程列表 -->
+    <select id="selectByTeacherId" resultType="com.boda.springboot.entity.Course">
+        SELECT
+            c.course_id,
+            c.course_name,
+            c.course_code,
+            c.description,
+            c.college,
+            c.cover_image,
+            c.invite_code,
+            c.status,
+            c.create_time
+        FROM course c
+        INNER JOIN teacher_course tc ON c.course_id = tc.course_id
+        WHERE tc.teacher_id = #{teacherId}
+          AND c.is_deleted = 0
+        ORDER BY c.create_time DESC
+    </select>
+
+    <!-- 删除课程（逻辑删除） -->
+    <update id="deleteById">
+        UPDATE course
+        SET is_deleted = 1, update_time = NOW()
+        WHERE course_id = #{courseId}
+    </update>
+
 </mapper>

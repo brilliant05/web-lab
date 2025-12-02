@@ -6,6 +6,8 @@ import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 /**
  * 课程 Mapper 接口
  */
@@ -45,4 +47,25 @@ public interface CourseMapper {
      * @param course 课程信息
      */
     void update(Course course);
+
+    /**
+     * 根据邀请码查询课程
+     * @param inviteCode 邀请码
+     * @return 课程信息
+     */
+    @Select("SELECT * FROM course WHERE invite_code = #{inviteCode} AND is_deleted = 0")
+    Course selectByInviteCode(String inviteCode);
+
+    /**
+     * 查询教师的课程列表
+     * @param teacherId 教师ID
+     * @return 课程列表
+     */
+    List<Course> selectByTeacherId(Long teacherId);
+
+    /**
+     * 删除课程（逻辑删除）
+     * @param courseId 课程ID
+     */
+    void deleteById(Long courseId);
 }

@@ -34,4 +34,38 @@ public interface CourseService {
      * @param course 课程信息
      */
     void updateCourse(Course course);
+
+    /**
+     * 删除课程（需处理关联数据）
+     * @param courseId 课程ID
+     */
+    void deleteCourse(Long courseId);
+
+    /**
+     * 为课程分配教师
+     * @param courseId 课程ID
+     * @param teacherId 教师ID
+     */
+    void assignTeacher(Long courseId, Long teacherId);
+
+    /**
+     * 移除课程教师
+     * @param courseId 课程ID
+     * @param teacherId 教师ID
+     */
+    void removeTeacher(Long courseId, Long teacherId);
+
+    /**
+     * 获取我的课程列表（教师）
+     * @param teacherId 教师ID
+     * @return 课程列表
+     */
+    PageResult getMyCourses(Long teacherId, Integer pageNum, Integer pageSize);
+
+    /**
+     * 学生加入课程（通过邀请码）
+     * @param studentId 学生ID
+     * @param inviteCode 邀请码
+     */
+    void joinCourse(Long studentId, String inviteCode);
 }

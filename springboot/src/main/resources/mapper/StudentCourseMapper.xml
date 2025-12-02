@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.boda.springboot.mapper.StudentCourseMapper">
+
+    <!-- 添加学生课程关联 -->
+    <insert id="save" parameterType="com.boda.springboot.entity.StudentCourse">
+        INSERT INTO student_course (student_id, course_id, teacher_id, join_method, join_time)
+        VALUES (#{studentId}, #{courseId}, #{teacherId}, #{joinMethod}, NOW())
+    </insert>
+
+    <!-- 删除学生课程关联 -->
+    <delete id="delete">
+        DELETE FROM student_course
+        WHERE student_id = #{studentId}
+          AND course_id = #{courseId}
+    </delete>
+
+    <!-- 根据课程ID删除所有关联 -->
+    <delete id="deleteByCourseId">
+        DELETE FROM student_course
+        WHERE course_id = #{courseId}
+    </delete>
+
+    <!-- 检查学生是否已加入课程 -->
+    <select id="selectByStudentAndCourse" resultType="com.boda.springboot.entity.StudentCourse">
+        SELECT id, student_id, course_id, teacher_id, join_method, join_time, create_time
+        FROM student_course
+        WHERE student_id = #{studentId}
+          AND course_id = #{courseId}
+    </select>
+
+    <!-- 统计课程关联的学生数量 -->
+    <select id="countByCourseId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM student_course
+        WHERE course_id = #{courseId}
+    </select>
+
+</mapper>
+

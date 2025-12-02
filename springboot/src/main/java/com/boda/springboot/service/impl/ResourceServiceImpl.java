@@ -10,6 +10,7 @@ import com.boda.springboot.exception.ServiceException;
 import com.boda.springboot.mapper.ResourceCollectionMapper;
 import com.boda.springboot.mapper.ResourceMapper;
 import com.boda.springboot.service.ResourceService;
+import com.boda.springboot.utils.FileTypeValidator;
 import com.boda.springboot.utils.QiNiuUtil;
 import com.boda.springboot.vo.ResourceVO;
 import com.github.pagehelper.Page;
@@ -312,31 +313,8 @@ public class ResourceServiceImpl implements ResourceService {
      * @param file 上传的文件
      */
     private void validateFileType(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-        String contentType = file.getContentType();
-
-        log.info("校验文件类型 - 文件名: {}, MIME类型: {}", originalFilename, contentType);
-
-        // 1. 校验文件扩展名
-        if (originalFilename == null || !originalFilename.contains(".")) {
-            throw new ServiceException("文件名无效");
-        }
-
-        String extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
-        if (!allowedExtensions.contains(extension)) {
-            throw new ServiceException("不支持的文件类型: " + extension +
-                "，仅支持: " + String.join(", ", allowedExtensions));
-        }
-
-        // 2. 校验 MIME 类型（双重校验，防止恶意文件）
-        if (contentType == null || !allowedTypes.contains(contentType.toLowerCase())) {
-            log.warn("文件MIME类型校验失败 - 文件名: {}, MIME: {}", originalFilename, contentType);
-            // MIME类型校验失败时给出警告，但不强制拒绝（因为某些文件的MIME类型可能不标准）
-            // 如果需要严格校验，可以取消注释下面这行
-             throw new ServiceException("不支持的文件MIME类型: " + contentType);
-        }
-
-        log.info("文件类型校验通过 - 扩展名: {}, MIME: {}", extension, contentType);
+        // 使用工具类进行校验（非严格模式，只记录 MIME 警告）
+        FileTypeValidator.validateFileType(file, allowedExtensions, allowedTypes, false);
     }
 }
 

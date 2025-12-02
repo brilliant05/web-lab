@@ -33,9 +33,10 @@ public class ResourceController {
      * 获取资源列表（分页）
      * GET /resources?pageNum=1&pageSize=10
      * 可选查询参数见 ResourcePageQueryDTO
+     *
+     * 权限：所有登录用户
      */
     @GetMapping
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<PageResult> getResourceList(ResourcePageQueryDTO queryDTO, HttpServletRequest request) {
         log.info("接收到资源列表查询请求 - 查询条件: {}", queryDTO);
 
@@ -48,9 +49,10 @@ public class ResourceController {
     /**
      * 获取资源详情
      * GET /resources/1
+     *
+     * 权限：所有登录用户
      */
     @GetMapping("/{resourceId}")
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<ResourceVO> getResourceDetail(@PathVariable Long resourceId, HttpServletRequest request) {
         log.info("接收到资源详情查询请求 - 资源ID: {}", resourceId);
 
@@ -158,9 +160,9 @@ public class ResourceController {
      * GET /resources/1/download
      *
      * 说明: 返回资源的文件URL，前端使用此URL下载文件
+     * 权限：所有登录用户
      */
     @GetMapping("/{resourceId}/download")
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<Map<String, String>> downloadResource(@PathVariable Long resourceId) {
         log.info("接收到资源下载请求 - 资源ID: {}", resourceId);
 
@@ -175,9 +177,10 @@ public class ResourceController {
     /**
      * 收藏资源
      * POST /resources/1/collect
+     *
+     * 权限：所有登录用户
      */
     @PostMapping("/{resourceId}/collect")
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<Void> collectResource(@PathVariable Long resourceId, HttpServletRequest request) {
         log.info("接收到收藏资源请求 - 资源ID: {}", resourceId);
 
@@ -190,9 +193,10 @@ public class ResourceController {
     /**
      * 取消收藏
      * DELETE /resources/1/collect
+     *
+     * 权限：所有登录用户
      */
     @DeleteMapping("/{resourceId}/collect")
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<Void> uncollectResource(@PathVariable Long resourceId, HttpServletRequest request) {
         log.info("接收到取消收藏请求 - 资源ID: {}", resourceId);
 
@@ -205,9 +209,10 @@ public class ResourceController {
     /**
      * 我的收藏列表
      * GET /resources/collections?pageNum=1&pageSize=10
+     *
+     * 权限：所有登录用户
      */
     @GetMapping("/collections")
-    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_TEACHER, Constant.ROLE_STUDENT})
     public Result<PageResult> getMyCollections(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,

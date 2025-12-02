@@ -7,9 +7,12 @@ import com.boda.springboot.common.Result;
 import com.boda.springboot.dto.CoursePageQueryDTO;
 import com.boda.springboot.entity.Course;
 import com.boda.springboot.service.CourseService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 
 /**
@@ -97,6 +100,94 @@ public class CourseController {
         courseService.updateCourse(course);
 
         return Result.success("课程更新成功!");
+    }
+
+    /**
+     * 删除课程（管理员）
+     * DELETE /courses/1
+     */
+    @DeleteMapping("/{courseId}")
+    @RequireRole(Constant.ROLE_ADMIN)
+    public Result deleteCourse(@PathVariable Long courseId) {
+        log.info("接收到删除课程请求 - 课程ID: {}", courseId);
+
+        courseService.deleteCourse(courseId);
+
+        return Result.success("课程删除成功!");
+    }
+
+    /**
+     * 为课程分配教师（管理员）
+     * POST /courses/1/teachers
+     * Body: {"teacherId": 123}
+     */
+    @PostMapping("/{courseId}/teachers")
+    @RequireRole(Constant.ROLE_ADMIN)
+    public Result assignTeacher(@PathVariable Long courseId, @RequestBody Map<String, Long> params) {
+        log.info("接收到分配教师请求 - 课程ID: {}, 参数: {}", courseId, params);
+
+        Long teacherId = params.get("teacherId");
+        if (teacherId == null) {
+            return Result.error("教师ID不能为空");
+        }
+
+        courseService.assignTeacher(courseId, teacherId);
+
+        return Result.success("教师分配成功!");
+    }
+
+    /**
+     * 移除课程教师（管理员）
+     * DELETE /courses/1/teachers/2
+     */
+    @DeleteMapping("/{courseId}/teachers/{teacherId}")
+    @RequireRole(Constant.ROLE_ADMIN)
+    public Result removeTeacher(@PathVariable Long courseId, @PathVariable Long teacherId) {
+        log.info("接收到移除教师请求 - 课程ID: {}, 教师ID: {}", courseId, teacherId);
+
+        courseService.removeTeacher(courseId, teacherId);
+
+        return Result.success("教师移除成功!");
+    }
+
+    /**
+     * 获取我的课程列表（教师）
+     * GET /courses/my?pageNum=1&pageSize=10
+     */
+    @GetMapping("/my")
+    @RequireRole(Constant.ROLE_TEACHER)
+    public Result<PageResult> getMyCourses(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            HttpServletRequest request) {
+
+        log.info("接收到查询我的课程列表请求");
+
+        Long teacherId = (Long) request.getAttribute("userId");
+        PageResult pageResult = courseService.getMyCourses(teacherId, pageNum, pageSize);
+
+        return Result.success(pageResult);
+    }
+
+    /**
+     * 学生加入课程（通过邀请码）
+     * POST /courses/join
+     * Body: {"inviteCode": "ABC123"}
+     */
+    @PostMapping("/join")
+    @RequireRole(Constant.ROLE_STUDENT)
+    public Result joinCourse(@RequestBody Map<String, String> params, HttpServletRequest request) {
+        log.info("接收到学生加入课程请求 - 参数: {}", params);
+
+        String inviteCode = params.get("inviteCode");
+        if (inviteCode == null || inviteCode.trim().isEmpty()) {
+            return Result.error("邀请码不能为空");
+        }
+
+        Long studentId = (Long) request.getAttribute("userId");
+        courseService.joinCourse(studentId, inviteCode);
+
+        return Result.success("加入课程成功!");
     }
 
 }

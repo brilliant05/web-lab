@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boda.springboot.mapper.ResourceMapper">
+
+    <!-- 插入资源 -->
+    <insert id="save" parameterType="com.boda.springboot.entity.Resource" useGeneratedKeys="true" keyProperty="resourceId">
+        INSERT INTO resource (
+            resource_title,
+            description,
+            course_id,
+            uploader_id,
+            file_name,
+            file_path,
+            file_size,
+            file_type
+            <if test="visibility != null">,visibility</if>
+            <if test="tags != null">,tags</if>
+        ) VALUES (
+            #{resourceTitle},
+            #{description},
+            #{courseId},
+            #{uploaderId},
+            #{fileName},
+            #{filePath},
+            #{fileSize},
+            #{fileType}
+            <if test="visibility != null">,#{visibility}</if>
+            <if test="tags != null">,#{tags}</if>
+        )
+    </insert>
+
+    <!-- 更新资源 -->
+    <update id="update" parameterType="com.boda.springboot.entity.Resource">
+        UPDATE resource
+        <set>
+            <if test="resourceTitle != null">resource_title = #{resourceTitle},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="visibility != null">visibility = #{visibility},</if>
+            <if test="isTop != null">is_top = #{isTop},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = NOW()
+        </set>
+        WHERE resource_id = #{resourceId} AND is_deleted = 0
+    </update>
+
+    <!-- 逻辑删除 -->
+    <update id="deleteById">
+        UPDATE resource SET is_deleted = 1, update_time = NOW()
+        WHERE resource_id = #{resourceId}
+    </update>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" resultType="com.boda.springboot.entity.Resource">
+        SELECT * FROM resource
+        WHERE resource_id = #{resourceId} AND is_deleted = 0
+    </select>
+
+    <!-- 分页查询资源列表（带关联信息） -->
+    <select id="selectPageList" resultType="com.boda.springboot.vo.ResourceVO">
+        SELECT
+            r.resource_id,
+            r.resource_title,
+            r.description,
+            r.course_id,
+            c.course_name,
+            r.uploader_id,
+            u.real_name AS uploader_name,
+            r.file_name,
+            r.file_path,
+            r.file_size,
+            r.file_type,
+            r.visibility,
+            r.download_count,
+            r.view_count,
+            r.is_top,
+            r.tags,
+            r.status,
+            r.create_time
+        FROM resource r
+        LEFT JOIN course c ON r.course_id = c.course_id
+        LEFT JOIN user u ON r.uploader_id = u.user_id
+        WHERE r.is_deleted = 0 AND r.status = 1
+        <if test="courseId != null">
+            AND r.course_id = #{courseId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                r.resource_title LIKE CONCAT('%', #{keyword}, '%')
+                OR r.description LIKE CONCAT('%', #{keyword}, '%')
+                OR r.tags LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="fileType != null and fileType != ''">
+            AND r.file_type = #{fileType}
+        </if>
+        ORDER BY
+            r.is_top DESC,
+            <choose>
+                <when test="orderBy == 'downloadCount'">
+                    r.download_count
+                </when>
+                <when test="orderBy == 'viewCount'">
+                    r.view_count
+                </when>
+                <otherwise>
+                    r.create_time
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="orderDir == 'asc'">ASC</when>
+                <otherwise>DESC</otherwise>
+            </choose>
+    </select>
+
+    <!-- 查询我上传的资源 -->
+    <select id="selectMyUploads" resultType="com.boda.springboot.vo.ResourceVO">
+        SELECT
+            r.resource_id,
+            r.resource_title,
+            r.description,
+            r.course_id,
+            c.course_name,
+            r.uploader_id,
+            u.real_name AS uploader_name,
+            r.file_name,
+            r.file_path,
+            r.file_size,
+            r.file_type,
+            r.visibility,
+            r.download_count,
+            r.view_count,
+            r.is_top,
+            r.tags,
+            r.status,
+            r.create_time
+        FROM resource r
+        LEFT JOIN course c ON r.course_id = c.course_id
+        LEFT JOIN user u ON r.uploader_id = u.user_id
+        WHERE r.is_deleted = 0 AND r.uploader_id = #{uploaderId}
+        ORDER BY r.create_time DESC
+    </select>
+
+    <!-- 增加下载次数 -->
+    <update id="increaseDownloadCount">
+        UPDATE resource
+        SET download_count = download_count + 1
+        WHERE resource_id = #{resourceId}
+    </update>
+
+    <!-- 增加浏览次数 -->
+    <update id="increaseViewCount">
+        UPDATE resource
+        SET view_count = view_count + 1
+        WHERE resource_id = #{resourceId}
+    </update>
+
+    <!-- 更新置顶状态 -->
+    <update id="updateTopStatus">
+        UPDATE resource
+        SET is_top = #{isTop}, update_time = NOW()
+        WHERE resource_id = #{resourceId} AND is_deleted = 0
+    </update>
+
+    <!-- 新增: 按ID联查资源详情（包含课程名与上传者姓名） -->
+    <select id="selectDetailById" resultType="com.boda.springboot.vo.ResourceVO">
+        SELECT
+            r.resource_id AS resourceId,
+            r.resource_title AS resourceTitle,
+            r.description,
+            r.course_id AS courseId,
+            c.course_name AS courseName,
+            r.uploader_id AS uploaderId,
+            u.real_name AS uploaderName,
+            r.file_name AS fileName,
+            r.file_path AS filePath,
+            r.file_size AS fileSize,
+            r.file_type AS fileType,
+            r.visibility,
+            r.download_count AS downloadCount,
+            r.view_count AS viewCount,
+            r.is_top AS isTop,
+            r.tags,
+            r.status,
+            r.create_time AS createTime
+        FROM resource r
+        LEFT JOIN course c ON r.course_id = c.course_id
+        LEFT JOIN user u ON r.uploader_id = u.user_id
+        WHERE r.resource_id = #{resourceId}
+          AND r.is_deleted = 0
+          AND r.status = 1
+    </select>
+
+</mapper>

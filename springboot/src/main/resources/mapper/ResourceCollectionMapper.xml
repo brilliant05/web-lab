@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boda.springboot.mapper.ResourceCollectionMapper">
+
+    <!-- 添加收藏 -->
+    <insert id="save" parameterType="com.boda.springboot.entity.ResourceCollection">
+        INSERT INTO resource_collection (student_id, resource_id, create_time)
+        VALUES (#{studentId}, #{resourceId}, NOW())
+    </insert>
+
+    <!-- 取消收藏 -->
+    <delete id="delete">
+        DELETE FROM resource_collection
+        WHERE student_id = #{studentId} AND resource_id = #{resourceId}
+    </delete>
+
+    <!-- 查询是否已收藏 -->
+    <select id="selectByUserAndResource" resultType="com.boda.springboot.entity.ResourceCollection">
+        SELECT * FROM resource_collection
+        WHERE student_id = #{studentId} AND resource_id = #{resourceId}
+    </select>
+
+    <!-- 查询我的收藏列表 -->
+    <select id="selectMyCollections" resultType="com.boda.springboot.vo.ResourceVO">
+        SELECT
+            r.resource_id,
+            r.resource_title,
+            r.description,
+            r.course_id,
+            c.course_name,
+            r.uploader_id,
+            u.real_name AS uploader_name,
+            r.file_name,
+            r.file_path,
+            r.file_size,
+            r.file_type,
+            r.visibility,
+            r.download_count,
+            r.view_count,
+            r.is_top,
+            r.tags,
+            r.status,
+            r.create_time
+        FROM resource_collection rc
+        INNER JOIN resource r ON rc.resource_id = r.resource_id
+        LEFT JOIN course c ON r.course_id = c.course_id
+        LEFT JOIN user u ON r.uploader_id = u.user_id
+        WHERE rc.student_id = #{studentId} AND r.is_deleted = 0 AND r.status = 1
+        ORDER BY rc.create_time DESC
+    </select>
+
+    <!-- 批量查询收藏状态 -->
+    <select id="selectCollectedResourceIds" resultType="java.lang.Long">
+        SELECT resource_id FROM resource_collection
+        WHERE student_id = #{studentId}
+        AND resource_id IN
+        <foreach collection="resourceIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>
+

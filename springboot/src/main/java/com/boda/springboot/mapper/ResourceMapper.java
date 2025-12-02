@@ -1,0 +1,66 @@
+package com.boda.springboot.mapper;
+
+import com.boda.springboot.dto.ResourcePageQueryDTO;
+import com.boda.springboot.entity.Resource;
+import com.boda.springboot.vo.ResourceVO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+/**
+ * 资源Mapper
+ */
+@Mapper
+public interface ResourceMapper {
+
+    /**
+     * 保存资源
+     */
+    void save(Resource resource);
+
+    /**
+     * 更新资源
+     */
+    void update(Resource resource);
+
+    /**
+     * 根据ID删除（逻辑删除）
+     */
+    void deleteById(Long resourceId);
+
+    /**
+     * 根据ID查询
+     */
+    Resource selectById(Long resourceId);
+
+    /**
+     * 分页查询资源列表（带关联信息）
+     */
+    List<ResourceVO> selectPageList(ResourcePageQueryDTO queryDTO);
+
+    /**
+     * 查询我上传的资源
+     */
+    List<ResourceVO> selectMyUploads(@Param("uploaderId") Long uploaderId);
+
+    /**
+     * 增加下载次数
+     */
+    void increaseDownloadCount(Long resourceId);
+
+    /**
+     * 增加浏览次数
+     */
+    void increaseViewCount(Long resourceId);
+
+    /**
+     * 更新置顶状态
+     */
+    void updateTopStatus(@Param("resourceId") Long resourceId, @Param("isTop") Integer isTop);
+
+    /**
+     * 按ID联查详情（包含课程名与上传者姓名）
+     */
+    ResourceVO selectDetailById(@Param("resourceId") Long resourceId);
+}

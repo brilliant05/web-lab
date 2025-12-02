@@ -8,6 +8,7 @@ import com.boda.springboot.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 @Slf4j
@@ -46,5 +47,14 @@ public class GlobalExceptionHandler {
     public Result<?> notLoginExceptionHandler(NotLoginException ex) {
         log.error("未登录异常: {}", ex.getMessage());
         return Result.unauthorized(ex.getMessage());
+    }
+
+    /**
+     * 处理文件上传大小超限异常
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public Result<?> maxUploadSizeExceptionHandler(MaxUploadSizeExceededException ex) {
+        log.error("文件上传大小超限: {}", ex.getMessage());
+        return Result.error("文件大小超过限制，单个文件最大支持 50MB");
     }
 }

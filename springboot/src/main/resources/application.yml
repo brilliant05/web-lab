@@ -16,9 +16,16 @@ spring:
   servlet:
     multipart:
       enabled: true                 # 启用文件上传
-      max-file-size: 10MB          # 单个文件最大大小
-      max-request-size: 50MB       # 单次请求最大大小
-      file-size-threshold: 0       # 文件写入磁盘的阈值
+      max-file-size: 50MB          # 单个文件最大大小
+      max-request-size: 100MB      # 单次请求最大大小（支持多文件上传）
+      file-size-threshold: 0       # 文件写入磁盘的阈值（0=全部写入磁盘）
+
+# 文件上传业务配置
+upload:
+  # 允许上传的文件类型（MIME类型，逗号分隔）
+  allowed-types: image/jpeg,image/jpg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip,application/x-zip-compressed,application/x-rar-compressed,application/x-7z-compressed,text/plain,video/mp4,video/avi,video/mpeg
+  # 允许的文件扩展名（逗号分隔）
+  allowed-extensions: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar,7z,txt,mp4,avi,mpeg
 
 
 

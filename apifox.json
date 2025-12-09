@@ -1,0 +1,164 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "学习资源与问答系统 API",
+    "version": "1.0.0",
+    "description": "基于当前后端代码自动梳理的接口。基础路径 `/api/v1`。"
+  },
+  "servers": [
+    { "url": "http://localhost:8080/api/v1" }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "登录",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "学生注册",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/auth/logout": { "post": { "summary": "退出登录", "responses": { "200": { "description": "OK" } } } },
+    "/auth/password": { "put": { "summary": "修改密码", "responses": { "200": { "description": "OK" } } } },
+    "/auth/reset-password": { "put": { "summary": "重置密码", "responses": { "200": { "description": "OK" } } } },
+
+    "/users/current": { "get": { "summary": "当前用户信息", "responses": { "200": { "description": "OK" } } } },
+    "/users/profile": { "put": { "summary": "更新用户信息", "responses": { "200": { "description": "OK" } } } },
+
+    "/courses": {
+      "post": { "summary": "新建课程(ADMIN)", "responses": { "200": { "description": "OK" } } }
+    },
+    "/courses/page": {
+      "get": {
+        "summary": "课程分页",
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/courses/{courseId}": {
+      "get": { "summary": "课程详情", "responses": { "200": { "description": "OK" } } },
+      "put": { "summary": "更新课程(ADMIN)", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "删除课程(ADMIN)", "responses": { "200": { "description": "OK" } } }
+    },
+    "/courses/{courseId}/teachers": {
+      "post": { "summary": "分配教师(ADMIN)", "responses": { "200": { "description": "OK" } } }
+    },
+    "/courses/{courseId}/teachers/{teacherId}": {
+      "delete": { "summary": "移除教师(ADMIN)", "responses": { "200": { "description": "OK" } } }
+    },
+    "/courses/my": {
+      "get": {
+        "summary": "教师-我的课程",
+        "parameters": [
+          { "name": "pageNum", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/courses/join": {
+      "post": {
+        "summary": "学生-加入课程",
+        "requestBody": { "required": true },
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+
+    "/admin/students/page": { "get": { "summary": "学生分页(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+    "/admin/students/{studentId}": {
+      "get": { "summary": "学生详情(ADMIN)", "responses": { "200": { "description": "OK" } } },
+      "put": { "summary": "更新学生(ADMIN)", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "删除学生(ADMIN)", "responses": { "200": { "description": "OK" } } }
+    },
+    "/admin/students/{studentId}/status": { "put": { "summary": "学生状态(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+    "/admin/students/{studentId}/courses": { "post": { "summary": "分配课程(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+    "/admin/students/{studentId}/courses/{courseId}": { "delete": { "summary": "移除课程(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+
+    "/admin/teachers": { "post": { "summary": "新增教师(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+    "/admin/teachers/{teacherId}": {
+      "put": { "summary": "更新教师(ADMIN)", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "删除教师(ADMIN)", "responses": { "200": { "description": "OK" } } }
+    },
+    "/admin/teachers/{teacherId}/status": { "put": { "summary": "教师状态(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+    "/admin/teachers/page": { "get": { "summary": "教师分页(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+
+    "/resources": { "get": { "summary": "资源分页", "responses": { "200": { "description": "OK" } } }, "post": { "summary": "上传资源", "responses": { "200": { "description": "OK" } } } },
+    "/resources/{resourceId}": {
+      "get": { "summary": "资源详情", "responses": { "200": { "description": "OK" } } },
+      "put": { "summary": "更新资源", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "删除资源", "responses": { "200": { "description": "OK" } } }
+    },
+    "/resources/{resourceId}/download": { "get": { "summary": "资源下载地址", "responses": { "200": { "description": "OK" } } } },
+    "/resources/{resourceId}/collect": {
+      "post": { "summary": "收藏资源", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "取消收藏", "responses": { "200": { "description": "OK" } } }
+    },
+    "/resources/collections": { "get": { "summary": "我的收藏", "responses": { "200": { "description": "OK" } } } },
+    "/resources/my-uploads": { "get": { "summary": "我上传的资源", "responses": { "200": { "description": "OK" } } } },
+    "/resources/{resourceId}/top": { "put": { "summary": "置顶资源(ADMIN/TEACHER)", "responses": { "200": { "description": "OK" } } } },
+
+    "/questions": { "get": { "summary": "问题列表", "responses": { "200": { "description": "OK" } } }, "post": { "summary": "学生提问", "responses": { "200": { "description": "OK" } } } },
+    "/questions/{questionId}": {
+      "get": { "summary": "问题详情", "responses": { "200": { "description": "OK" } } },
+      "put": { "summary": "更新问题", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "删除问题", "responses": { "200": { "description": "OK" } } }
+    },
+    "/questions/my-questions": { "get": { "summary": "我的提问(学生)", "responses": { "200": { "description": "OK" } } } },
+    "/questions/pending": { "get": { "summary": "待回答(教师)", "responses": { "200": { "description": "OK" } } } },
+    "/questions/{questionId}/answers": { "post": { "summary": "回答问题(教师)", "responses": { "200": { "description": "OK" } } } },
+    "/answers/{answerId}": {
+      "put": { "summary": "更新回答(教师/ADMIN)", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "删除回答(教师/ADMIN)", "responses": { "200": { "description": "OK" } } }
+    },
+    "/answers/{answerId}/like": {
+      "post": { "summary": "点赞回答", "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "取消点赞", "responses": { "200": { "description": "OK" } } }
+    },
+
+    "/notifications": { "get": { "summary": "通知列表", "responses": { "200": { "description": "OK" } } } },
+    "/notifications/unread-count": { "get": { "summary": "未读数量", "responses": { "200": { "description": "OK" } } } },
+    "/notifications/{notificationId}/read": { "put": { "summary": "标记已读", "responses": { "200": { "description": "OK" } } } },
+    "/notifications/read-all": { "put": { "summary": "全部已读", "responses": { "200": { "description": "OK" } } } },
+    "/notifications/system": { "post": { "summary": "系统通知(ADMIN)", "responses": { "200": { "description": "OK" } } } },
+
+    "/upload": { "post": { "summary": "上传文件", "responses": { "200": { "description": "OK" } } } },
+    "/upload/image": { "post": { "summary": "上传图片", "responses": { "200": { "description": "OK" } } } }
+  }
+}
+

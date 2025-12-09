@@ -124,8 +124,12 @@
 </template>
 
 <script setup>
+import { login } from '@/api'
+import { ElMessage } from 'element-plus'
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const isSignUpMode = ref(false)
 const isAnimating = ref(false)
 
@@ -161,8 +165,28 @@ const handleRegister = () => {
   console.log('Register payload', { ...registerForm })
 }
 
-const handleLogin = () => {
-  console.log('Login payload', { ...loginForm })
+const handleLogin = async () => {
+  if (!loginForm.email || !loginForm.password) {
+    ElMessage.warning('请输入用户名和密码')
+    return
+  }
+
+  try {
+    const res = await login({
+      username: loginForm.email,
+      password: loginForm.password
+    })
+    
+    if (res.code === 200) {
+      const { token, userInfo } = res.data
+      localStorage.setItem('token', token)
+      localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      ElMessage.success('登录成功')
+      router.push('/admin')
+    }
+  } catch (error) {
+    console.error('Login failed:', error)
+  }
 }
 </script>
 

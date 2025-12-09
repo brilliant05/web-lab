@@ -24,7 +24,7 @@ public class AdminStudentController {
      * 8.2.1 分页获取学生列表
      * 对应API：GET /api/v1/admin/students?pageNum=1&pageSize=10&keyword=张&college=计算机学院
      */
-    @GetMapping("/page")
+    @GetMapping
     @RequireRole(Constant.ROLE_ADMIN) // 仅管理员可访问
     public Result<PageResult> pageQueryStudents(StudentPageQueryDTO studentPageQueryDTO) {
         log.info("分页查询学生列表，查询条件：{}", studentPageQueryDTO);

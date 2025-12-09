@@ -57,7 +57,7 @@ public class CourseController {
      * @param coursePageQueryDTO 查询条件（包含分页参数）
      * @return 分页结果
      */
-    @GetMapping("/page")
+    @GetMapping
     @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_STUDENT})
     public Result<PageResult> coursePageQuery(CoursePageQueryDTO coursePageQueryDTO) {
         log.info("接收到课程分页查询请求: {}", coursePageQueryDTO);

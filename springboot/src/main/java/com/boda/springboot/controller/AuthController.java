@@ -117,32 +117,36 @@ public class AuthController {
     }
 
     /**
-     * 重置密码
-     * @param updatePassword
-     * @param request
-     * @return
+     * 忘记密码 - 重置密码
+     * 用户未登录时通过用户名验证身份后重置密码
+     * 注意：此接口不需要JWT认证，建议配合验证码等方式增强安全性
+     *
+     * @param updatePassword 重置密码请求参数(包含username、newPassword、confirmPassword等)
+     * @return 重置结果
      */
-    @PutMapping("/reset-password")
-    public Result resetPassword(@RequestBody UpdatePassword updatePassword, HttpServletRequest request) {
-        // 从 JWT 拦截器注入的 request 属性中获取当前登录用户信息
-        String username = (String) request.getAttribute("username");
-        Long userId = (Long) request.getAttribute("userId");
-        log.info("用户 {} (ID:{}) 重置密码", username, userId);
+    @PostMapping("/reset-password")
+    public Result resetPassword(@RequestBody UpdatePassword updatePassword) {
+        log.info("用户 {} 请求重置密码", updatePassword.getUsername());
+
         // 参数校验
+        if (updatePassword.getUsername() == null || updatePassword.getUsername().trim().isEmpty()) {
+            return Result.error("用户名不能为空");
+        }
         if (updatePassword.getNewPassword() == null || updatePassword.getNewPassword().trim().isEmpty()) {
             return Result.error("新密码不能为空");
         }
         if (updatePassword.getNewPassword().length() < 6) {
             return Result.error("新密码长度不能少于6位");
         }
-        // 验证新密码和确认密码是否一致（如果有 confirmPassword 字段）
-        if (updatePassword.getConfirmPassword() != null &&
+
+        // 验证新密码和确认密码是否一致
+        if (updatePassword.getConfirmPassword() == null ||
             !updatePassword.getNewPassword().equals(updatePassword.getConfirmPassword())) {
             return Result.error("两次输入的新密码不一致");
         }
-        // 设置用户名并调用服务层修改密码
-        updatePassword.setUsername(username);
+
+        // 调用服务层重置密码
         authService.resetPassword(updatePassword);
-        return Result.success("密码重置成功");
+        return Result.success("密码重置成功，请使用新密码登录");
     }
 }

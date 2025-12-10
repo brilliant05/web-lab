@@ -11,6 +11,7 @@
             <if test="username != null and username != ''">username = #{username},</if>
             <if test="password != null and password != ''">password = #{password},</if>
             <if test="realName != null and realName != ''">real_name = #{realName},</if>
+            <if test="college != null and college != ''">college = #{college},</if>
             <if test="email != null and email != ''">email = #{email},</if>
             <if test="phone != null and phone != ''">phone = #{phone},</if>
             <if test="avatarUrl != null and avatarUrl != ''">avatar_url = #{avatarUrl},</if>
@@ -34,6 +35,8 @@
             status,
             job_title,
             profile,
+            college,
+            email,
             create_time,
             update_time
         FROM user

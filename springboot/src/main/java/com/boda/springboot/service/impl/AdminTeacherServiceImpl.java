@@ -53,7 +53,7 @@ public class AdminTeacherServiceImpl implements AdminTeacherService {
         }
 
         // 调用 Mapper 更新
-        userMapper.update(teacher);
+        adminTeacherMapper.updateTeacher(teacher);
     }
 
     /**

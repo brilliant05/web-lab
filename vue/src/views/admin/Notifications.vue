@@ -23,7 +23,8 @@
     <el-table
       v-loading="loading"
       :data="tableData"
-      style="width: 100%; margin-top: 20px"
+      style="width: 100%; margin-top: 20px; flex: 1"
+      height="100%"
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" />
@@ -201,7 +202,16 @@ onMounted(() => {
 
 <style scoped>
 .content-card {
-  min-height: calc(100vh - 120px);
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .operation-bar {
@@ -228,7 +238,8 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 20px;
-  padding: 20px 0;
+  padding: 10px 0;
+  flex-shrink: 0;
 }
 
 @media screen and (max-width: 768px) {

@@ -257,7 +257,16 @@ export const getTeacherList = (params) => {
  * @returns {Promise} 返回分页数据
  */
 export const getStudentList = (params) => {
-    return http.get('/admin/students’', { params });
+    return http.get('/admin/students', { params });
+};
+
+/**
+ * 添加学生（管理员）
+ * @param {Object} data - 学生信息
+ * @returns {Promise}
+ */
+export const addStudent = (data) => {
+    return http.post('/admin/students', data);
 };
 
 /**
@@ -726,6 +735,7 @@ export default {
 
     // 管理员-学生管理
     getStudentList,
+    addStudent,
     getStudentDetail,
     updateStudent,
     updateStudentStatus,

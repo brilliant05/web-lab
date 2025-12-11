@@ -25,17 +25,30 @@
     <el-table
       v-loading="loading"
       :data="tableData"
-      style="width: 100%; margin-top: 20px"
+      style="width: 100%; margin-top: 20px; flex: 1"
+      height="100%"
       @selection-change="handleSelectionChange"
+      :row-class-name="tableRowClassName"
     >
       <el-table-column type="selection" width="55" />
       <el-table-column type="index" label="序号" width="80" align="center" />
       <el-table-column prop="username" label="用户名" width="150" />
       <el-table-column prop="realName" label="姓名" width="120" />
-      <el-table-column prop="email" label="邮箱" min-width="200" />
-      <el-table-column prop="phone" label="手机号" width="130" />
       <el-table-column prop="jobTitle" label="职称" width="120" />
       <el-table-column prop="college" label="院系" width="150" />
+      <el-table-column prop="email" label="邮箱" min-width="200">
+        <template #default="{ row }">
+          <span v-if="row.email">{{ row.email }}</span>
+          <span v-else style="color: #909399">暂未绑定</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="phone" label="手机号" width="130">
+        <template #default="{ row }">
+          <span v-if="row.phone">{{ row.phone }}</span>
+          <span v-else style="color: #909399">暂未绑定</span>
+        </template>
+      </el-table-column>
+
       <el-table-column label="状态" width="100">
         <template #default="{ row }">
           <el-switch
@@ -113,7 +126,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="密码" prop="password" v-if="formType === 'add'">
+        <!-- <el-form-item label="密码" prop="password" v-if="formType === 'add'">
           <el-input 
             v-model="formData.password" 
             type="password" 
@@ -121,7 +134,7 @@
             show-password 
             :prefix-icon="Lock"
           />
-        </el-form-item>
+        </el-form-item> -->
 
         <el-form-item label="职称" prop="jobTitle">
           <el-select v-model="formData.jobTitle" placeholder="请选择职称" style="width: 100%">
@@ -191,7 +204,7 @@
         <el-descriptions-item label="手机号">{{ viewData.phone }}</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag :type="viewData.status === 1 ? 'success' : 'danger'">
-            {{ viewData.status === 1 ? '启用' : '禁用' }}
+            {{ viewData.status === 1 ? '正常' : '禁用' }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ viewData.createTime }}</el-descriptions-item>
@@ -202,40 +215,23 @@
 
 <script setup>
 import {
-  ArrowDown, Delete, Edit,
-  Iphone,
-  Lock,
-  Medal,
-  Message,
-  Plus, Refresh,
-  School,
-  Search,
-  User,
-  View
+    ArrowDown, Delete, Edit,
+    Iphone,
+    Medal,
+    Message,
+    Plus, Refresh,
+    School,
+    Search,
+    User,
+    View
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, onMounted, reactive, ref } from 'vue'
 
 import { addTeacher, deleteTeacher, getTeacherList, updateTeacher, updateTeacherStatus } from '@/api'
+import { COLLEGE_LIST } from '@/utils/constants'
 
-const collegeList = [
-  '能源与动力工程学院',
-  '光电信息与计算机工程学院',
-  '管理学院',
-  '机械工程学院',
-  '外语学院',
-  '环境与建筑学院',
-  '健康科学与工程学院',
-  '出版学院',
-  '理学院',
-  '材料与化学学院',
-  '基础学院',
-  '中英国际学院',
-  '中德国际学院',
-  '马克思主义学院',
-  '体育教学部',
-  '沪江学院'
-]
+const collegeList = COLLEGE_LIST
 
 const searchKeyword = ref('')
 const loading = ref(false)
@@ -268,9 +264,11 @@ const rules = {
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
   ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+  jobTitle: [
+    { required: true, message: '请输入职称', trigger: 'blur' }
+  ],
+  college: [
+    { required: true, message: '请选择院系', trigger: 'change' }
   ],
   realName: [
     { required: true, message: '请输入真实姓名', trigger: 'blur' }
@@ -432,6 +430,13 @@ const handleCurrentChange = (val) => {
   loadTableData()
 }
 
+const tableRowClassName = ({ row }) => {
+  if (row.status === 0) {
+    return 'disabled-row'
+  }
+  return ''
+}
+
 const loadTableData = async () => {
   loading.value = true
   try {
@@ -460,7 +465,16 @@ onMounted(() => {
 
 <style scoped>
 .content-card {
-  min-height: calc(100vh - 120px);
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .operation-bar {
@@ -487,7 +501,8 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 20px;
-  padding: 20px 0;
+  padding: 10px 0;
+  flex-shrink: 0;
 }
 
 @media screen and (max-width: 768px) {
@@ -526,6 +541,11 @@ onMounted(() => {
 :deep(.teacher-dialog .el-dialog__footer) {
   padding: 20px;
   border-top: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.el-table .disabled-row) {
+  background: var(--el-color-info-light-9);
+  color: var(--el-text-color-secondary);
 }
 </style>
 

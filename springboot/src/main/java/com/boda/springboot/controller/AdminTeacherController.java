@@ -85,7 +85,7 @@ public class AdminTeacherController {
      * @param teacherPageQueryDTO 查询条件（包含分页参数）
      * @return 分页结果
      */
-    @GetMapping("/page")
+    @GetMapping
     @RequireRole("ADMIN")
     public Result<PageResult> pageQueryTeachers(TeacherPageQueryDTO teacherPageQueryDTO){
         log.info("分页查询教师: {}", teacherPageQueryDTO);

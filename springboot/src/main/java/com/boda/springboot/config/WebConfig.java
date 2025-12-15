@@ -23,7 +23,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/auth/login",              // 登录接口不拦截
                         "/auth/register",           // 注册接口不拦截
-                        "/auth/forgot-password",    // 忘记密码不拦截
+                        "/auth/reset-password",     // 重置密码接口不拦截
                         "/test/**",                 // 测试接口不拦截(开发阶段)
                         "/error",                   // 错误页面
                         // Knife4j API文档相关路径

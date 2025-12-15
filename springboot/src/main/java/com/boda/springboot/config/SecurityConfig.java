@@ -31,6 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configure(http))
                 // 禁用 CSRF(使用 JWT 不需要)
                 .csrf(csrf -> csrf.disable())
                 // 禁用 Session(使用 JWT 不需要 Session)

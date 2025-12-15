@@ -26,7 +26,17 @@ public class AuthServiceImpl implements AuthService {
      * @return 已认证用户信息
      */
     public User login(LoginRequest req) {
-        User userInfo = userMapper.selectByUsername(req.getUsername());
+        String username = req.getUsername();
+        String studentId = req.getStudentId();
+        User userInfo = null;
+        // 根据用户名或学号查询用户
+        if(username != null){
+            userInfo = userMapper.selectByUsername(req.getUsername());
+        }
+
+        if(userInfo == null && studentId != null){
+            userInfo = userMapper.selectByStudentId(req.getStudentId());
+        }
         if (userInfo == null) {
             throw new ServiceException("401", "用户不存在");
         }

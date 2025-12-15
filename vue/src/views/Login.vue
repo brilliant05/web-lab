@@ -9,40 +9,35 @@
           <h2 class="form_title title">创建你的账户</h2>
           <span class="form__span">使用用户名创建</span>
           <input
-            v-model="registerForm.username"
+            v-model="registerForm.name"
             class="form__input"
             type="text"
             placeholder="用户名"
             required
           />
           <input
-            v-model="registerForm.studentId"
-            class="form__input"
-            type="text"
-            placeholder="学号"
-            required
+              v-model="registerForm.name"
+              class="form__input"
+              type="text"
+              placeholder="学号/工号"
+              required
           />
           <input
             v-model="registerForm.password"
             class="form__input"
             type="password"
-            placeholder="密码（至少6位）"
+            placeholder="密码"
             required
-            minlength="6"
           />
           <input
-            v-model="registerForm.confirmPassword"
-            class="form__input"
-            type="password"
-            placeholder="确认密码"
-            required
+              v-model="registerForm.password"
+              class="form__input"
+              type="password"
+              placeholder="重新确认您的密码"
+              required
           />
-          <button 
-            class="form__button button submit" 
-            type="submit"
-            :disabled="isRegisterLoading"
-          >
-            {{ isRegisterLoading ? '注册中...' : '现在开始！' }}
+          <button class="form__button button submit" type="submit">
+            现在开始！
           </button>
         </form>
       </div>
@@ -59,7 +54,7 @@
           <h2 class="form_title title">欢迎登录</h2>
           <span class="form__span">使用用户名开始吧！</span>
           <input
-            v-model="loginForm.username"
+            v-model="loginForm.email"
             class="form__input"
             type="text"
             placeholder="用户名"
@@ -73,12 +68,8 @@
             required
           />
           <a class="form__link" href="#">忘记密码？</a>
-          <button 
-            class="form__button button submit" 
-            type="submit"
-            :disabled="isLoading"
-          >
-            {{ isLoading ? '登录中...' : '现在开始！' }}
+          <button class="form__button button submit" type="submit">
+            现在开始！
           </button>
         </form>
       </div>
@@ -133,32 +124,25 @@
 </template>
 
 <script setup>
+import { login } from '@/api'
+import { ElMessage } from 'element-plus'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { authApi } from '../api/index'
-import backgroundImage from '../assets/back.jpeg'
 
 const router = useRouter()
-
 const isSignUpMode = ref(false)
 const isAnimating = ref(false)
 
 const registerForm = reactive({
-  username: '',
-  password: '',
-  confirmPassword: '',
-  studentId: ''
-})
-
-const isRegisterLoading = ref(false)
-
-const loginForm = reactive({
-  username: '',
+  name: '',
+  email: '',
   password: ''
 })
 
-const isLoading = ref(false)
+const loginForm = reactive({
+  email: '',
+  password: ''
+})
 
 const icons = {
   facebook:
@@ -177,171 +161,31 @@ const toggleMode = () => {
   }, 1500)
 }
 
-const handleRegister = async () => {
-  // 表单验证
-  if (!registerForm.username || !registerForm.username.trim()) {
-    ElMessage.warning('请输入用户名')
-    return
-  }
-  
-  if (!registerForm.studentId || !registerForm.studentId.trim()) {
-    ElMessage.warning('请输入学号')
-    return
-  }
-  
-  if (!registerForm.password || !registerForm.password.trim()) {
-    ElMessage.warning('请输入密码')
-    return
-  }
-  
-  if (registerForm.password.length < 6) {
-    ElMessage.warning('密码长度不能少于6位')
-    return
-  }
-  
-  if (registerForm.password !== registerForm.confirmPassword) {
-    ElMessage.warning('两次输入的密码不一致')
-    return
-  }
-
-  isRegisterLoading.value = true
-  try {
-    // 构建注册数据
-    const registerData = {
-      username: registerForm.username.trim(),
-      password: registerForm.password,
-      studentId: registerForm.studentId.trim()
-    }
-
-    console.log('注册数据:', registerData)
-
-    const response = await authApi.register(registerData)
-
-    console.log('注册响应:', response)
-
-    if (response && response.code === 200) {
-      ElMessage.success(response.message || '注册成功')
-      
-      // 注册成功后，清空表单并切换到登录模式
-      setTimeout(() => {
-        // 清空表单
-        registerForm.username = ''
-        registerForm.studentId = ''
-        registerForm.password = ''
-        registerForm.confirmPassword = ''
-        
-        // 切换到登录模式
-        isSignUpMode.value = false
-        
-        // 自动填充用户名到登录表单
-        loginForm.username = registerData.username
-      }, 1000)
-    } else {
-      const errorMsg = response?.message || '注册失败'
-      ElMessage.error(errorMsg)
-      console.error('注册失败:', response)
-    }
-  } catch (error) {
-    console.error('注册失败:', error)
-    // 错误信息已在 request.js 的拦截器中处理
-    // 如果是用户名已存在的错误，这里可以额外处理
-    if (error?.response?.data?.message) {
-      const errorMsg = error.response.data.message
-      if (errorMsg.includes('用户名') || errorMsg.includes('已存在')) {
-        ElMessage.error('用户名已存在，请更换用户名')
-      }
-    }
-  } finally {
-    isRegisterLoading.value = false
-  }
+const handleRegister = () => {
+  console.log('Register payload', { ...registerForm })
 }
 
 const handleLogin = async () => {
-  if (!loginForm.username || !loginForm.password) {
+  if (!loginForm.email || !loginForm.password) {
     ElMessage.warning('请输入用户名和密码')
     return
   }
 
-  isLoading.value = true
   try {
-    const response = await authApi.login({
-      username: loginForm.username,
+    const res = await login({
+      username: loginForm.email,
       password: loginForm.password
     })
-
-    console.log('登录响应:', response)
-
-    if (response && response.code === 200) {
-      // 获取数据
-      const data = response.data
-      if (!data) {
-        ElMessage.error('登录失败：响应数据为空')
-        console.error('响应数据为空:', response)
-        return
-      }
-
-      // 保存 token
-      const token = data.token
-      if (token) {
-        localStorage.setItem('token', token)
-        console.log('Token 已保存')
-      } else {
-        console.warn('Token 不存在')
-      }
-      
-      // 保存用户信息
-      const userInfo = data.userInfo || data
-      if (userInfo) {
-        localStorage.setItem('userInfo', JSON.stringify(userInfo))
-        console.log('用户信息已保存:', userInfo)
-      } else {
-        console.warn('用户信息不存在')
-      }
-
-      ElMessage.success(response.message || '登录成功')
-
-      // 根据角色跳转（兼容多种格式）
-      const role = (userInfo?.role || data?.role || '').toUpperCase()
-      console.log('用户角色:', role, '原始值:', userInfo?.role || data?.role)
-      
-      // 延迟跳转，确保消息提示显示
-      setTimeout(() => {
-        let targetPath = '/admin' // 默认路径
-        
-        if (role === 'ADMIN') {
-          targetPath = '/admin'
-        } else if (role === 'TEACHER') {
-          targetPath = '/teacher/home'
-        } else if (role === 'STUDENT') {
-          targetPath = '/student/home'
-        } else {
-          console.warn('未知角色，使用默认路径:', role)
-        }
-        
-        console.log('准备跳转到:', targetPath)
-        
-        // 使用 router.push，失败则使用 window.location
-        router.push(targetPath).then(() => {
-          console.log('路由跳转成功:', targetPath)
-        }).catch(err => {
-          console.error('路由跳转失败，使用 window.location:', err)
-          window.location.href = targetPath
-        })
-      }, 500)
-    } else {
-      const errorMsg = response?.message || '登录失败：响应数据格式错误'
-      ElMessage.error(errorMsg)
-      console.error('登录失败:', response)
+    
+    if (res.code === 200) {
+      const { token, userInfo } = res.data
+      localStorage.setItem('token', token)
+      localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      ElMessage.success('登录成功')
+      router.push('/admin')
     }
   } catch (error) {
-    console.error('登录失败:', error)
-    const msg =
-      error?.response?.data?.message ||
-      error?.message ||
-      '用户名或密码错误'
-    ElMessage.error(msg)
-  } finally {
-    isLoading.value = false
+    console.error('Login failed:', error)
   }
 }
 </script>
@@ -360,11 +204,6 @@ const handleLogin = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('../assets/back.jpeg');
-  background-position: bottom center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  position: relative;
 }
 
 .main {

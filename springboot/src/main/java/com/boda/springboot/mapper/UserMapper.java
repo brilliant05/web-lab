@@ -17,6 +17,14 @@ public interface UserMapper {
     User selectByUsername(String username);
 
     /**
+     * 根据学号查询用户信息
+     * @param studentId
+     * @return
+     */
+    @Select("SELECT * FROM user WHERE student_id = #{studentId} and is_deleted = 0")
+    User selectByStudentId(String studentId);
+
+    /**
      * 根据用户ID查询用户信息
      * @param userId
      * @return
@@ -57,4 +65,5 @@ public interface UserMapper {
      * @param user
      */
     void update(User user);
+
 }

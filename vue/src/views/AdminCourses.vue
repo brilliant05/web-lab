@@ -138,9 +138,11 @@ const submitCreate = async () => {
       await load()
     } else {
       error.value = res?.message || '创建失败'
+      console.error('创建课程失败:', res)
     }
   } catch (e) {
     error.value = e?.message || '创建失败'
+    console.error('创建课程异常:', e)
   } finally {
     saving.value = false
   }
@@ -185,20 +187,3 @@ onMounted(load)
   border: none;
   border-radius: 12px;
   padding: 10px 12px;
-  background: #ecf0f3;
-  box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #f9f9f9;
-  outline: none;
-}
-
-.textarea {
-  min-height: 90px;
-  resize: vertical;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-</style>
-

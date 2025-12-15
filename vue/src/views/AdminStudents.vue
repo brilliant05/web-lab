@@ -23,6 +23,9 @@
             <button class="primary-btn" @click="load" :disabled="loading">
               {{ loading ? '加载中...' : '刷新' }}
             </button>
+            <button class="primary-btn" @click="openCreate" :disabled="loading">
+              新建学生
+            </button>
           </div>
         </div>
 
@@ -44,42 +47,17 @@
             </div>
           </div>
         </div>
-      </section>
-    </div>
-  </div>
-</template>
-
-<script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { adminApi } from '../api/admin'
-
-const items = reactive([])
-const loading = ref(false)
-const error = ref('')
-const keyword = ref('')
-
-const load = async () => {
-  loading.value = true
-  error.value = ''
-  try {
-    const res = await adminApi.getStudents({ keyword: keyword.value || undefined })
-    if (res?.code === 200) {
-      const records = res.data?.records || res.data || []
-      items.splice(0, items.length, ...(records || []))
-    } else {
-      error.value = res?.message || '加载失败'
-    }
-  } catch (e) {
-    error.value = e?.message || '请求失败'
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(load)
-</script>
-
-<style scoped>
-@import './admin-shared.css';
-</style>
-
+        <div v-if="showCreate" class="modal-mask">
+          <div class="modal">
+            <h3>新建学生</h3>
+            <div class="modal-body">
+              <input v-model="form.username" class="input" placeholder="用户名" />
+              <input v-model="form.realName" class="input" placeholder="姓名（可选）" />
+              <input v-model="form.studentId" class="input" placeholder="学号（可选）" />
+              <input v-model="form.college" class="input" placeholder="学院（可选）" />
+              <input
+                v-model="form.password"
+                class="input"
+                type="password"
+                placeholder="密码（至少6位）"
+              

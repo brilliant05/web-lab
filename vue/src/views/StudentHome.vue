@@ -9,6 +9,7 @@
         <div class="status-chip">
           <span class="status-label">用户状态</span>
           <span class="status-value">{{ currentUser.role }}</span>
+          <button class="logout-btn" @click="handleLogout">退出登录</button>
         </div>
       </header>
 
@@ -66,6 +67,11 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { authApi } from '@/api'
+
+const router = useRouter()
 
 const modules = [
   {
@@ -139,6 +145,19 @@ const activeModule = ref(modules[0])
 
 const setActive = (module) => {
   activeModule.value = module
+}
+
+const handleLogout = async () => {
+  try {
+    await authApi.logout()
+  } catch (e) {
+    console.error('学生退出登录失败:', e)
+  } finally {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userInfo')
+    ElMessage.success('已退出登录')
+    router.push('/')
+  }
 }
 </script>
 

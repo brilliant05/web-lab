@@ -68,11 +68,27 @@ public class AuthController {
 
     /**
      * 退出登录
-     * @return
+     * 前端应在请求头中携带当前的 JWT：Authorization: Bearer <token>
+     * 后端会将该 Token 加入黑名单，后续请求将被视为未登录
      */
     @PostMapping("/logout")
-    public Result logout(){
-        log.info("用户退出登录");
+    public Result<String> logout(HttpServletRequest request){
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                // 解析出用户信息，仅用于日志
+                String username = jwtUtil.getUsernameFromToken(token);
+                Long userId = jwtUtil.getUserIdFromToken(token);
+                log.info("用户退出登录, username={}, userId={}", username, userId);
+            } catch (Exception e) {
+                log.warn("解析退出登录 token 失败，但仍然作废该 token", e);
+            }
+            // 将 token 加入黑名单
+            jwtUtil.invalidateToken(token);
+        } else {
+            log.info("退出登录请求未携带有效 Authorization 头, 直接返回成功");
+        }
         return Result.success("退出成功");
     }
 

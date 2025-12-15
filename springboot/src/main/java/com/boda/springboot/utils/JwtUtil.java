@@ -7,9 +7,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * JWT 工具类
@@ -23,6 +22,11 @@ public class JwtUtil {
 
     @Value("${jwt.expiration}")
     private Long expiration;
+
+    /**
+     * 已注销 / 作废的 Token 黑名单（只在当前应用进程内生效）
+     */
+    private final Set<String> tokenBlacklist = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * 生成 JWT Token
@@ -99,6 +103,11 @@ public class JwtUtil {
      */
     public boolean validateToken(String token) {
         try {
+            // 如果在黑名单中，视为无效
+            if (tokenBlacklist.contains(token)) {
+                return false;
+            }
+
             SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
             Jwts.parser()
                     .verifyWith(key)
@@ -108,6 +117,15 @@ public class JwtUtil {
         } catch (JwtException | IllegalArgumentException e) {
             // Token 无效或过期
             return false;
+        }
+    }
+
+    /**
+     * 将 Token 加入黑名单，表示已退出登录 / 作废
+     */
+    public void invalidateToken(String token) {
+        if (token != null && !token.isEmpty()) {
+            tokenBlacklist.add(token);
         }
     }
 

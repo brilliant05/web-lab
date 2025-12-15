@@ -1,11 +1,17 @@
 package com.boda.springboot.service;
 
 import com.boda.springboot.common.PageResult;
-import com.boda.springboot.dto.AssignCourseDTO;
 import com.boda.springboot.dto.StudentPageQueryDTO;
 import com.boda.springboot.entity.User; // 复用User实体，代表学生（role='STUDENT'）
 
 public interface AdminStudentService {
+
+    /**
+     * 新增学生（复用 User 表，role='STUDENT'）
+     * @param student 学生信息
+     */
+    void saveStudent(User student);
+
     /**
      * 分页查询学生   筛选user表中role='STUDENT'的记录
      */
@@ -21,17 +27,4 @@ public interface AdminStudentService {
      */
     void updateStudent(User student);
 
-    /**
-     * 管理员为学生分配课程
-     * @param studentId 学生ID
-     * @param assignCourseDTO 分配课程信息（课程ID、教师ID）
-     */
-    void assignCourse(Long studentId, AssignCourseDTO assignCourseDTO);
-
-    /**
-     * 管理员移除学生课程
-     * @param studentId 学生ID
-     * @param courseId 课程ID
-     */
-    void removeCourse(Long studentId, Long courseId);
 }

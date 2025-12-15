@@ -4,7 +4,6 @@ import com.boda.springboot.annotation.RequireRole;
 import com.boda.springboot.common.Constant;
 import com.boda.springboot.common.PageResult;
 import com.boda.springboot.common.Result;
-import com.boda.springboot.dto.AssignCourseDTO;
 import com.boda.springboot.dto.StudentPageQueryDTO;
 import com.boda.springboot.entity.User;
 import com.boda.springboot.service.AdminStudentService;
@@ -19,6 +18,18 @@ public class AdminStudentController {
 
     @Autowired
     private AdminStudentService adminStudentService;
+
+    /**
+     * 新增学生
+     * 对应API：POST /api/v1/admin/students
+     */
+    @PostMapping
+    @RequireRole(Constant.ROLE_ADMIN)
+    public Result<String> saveStudent(@RequestBody User student) {
+        log.info("添加学生: {}", student);
+        adminStudentService.saveStudent(student);
+        return Result.success("学生添加成功！");
+    }
 
     /**
      * 8.2.1 分页获取学生列表
@@ -50,7 +61,7 @@ public class AdminStudentController {
      */
     @PutMapping("/{studentId}/status")
     @RequireRole(Constant.ROLE_ADMIN)
-    public Result enableAndDisableStudent(
+    public Result<String> enableAndDisableStudent(
             @PathVariable Long studentId,
             @RequestBody User student
     ) {
@@ -67,7 +78,7 @@ public class AdminStudentController {
      */
     @DeleteMapping("/{studentId}")
     @RequireRole(Constant.ROLE_ADMIN)
-    public Result deleteStudent(@PathVariable Long studentId) {
+    public Result<String> deleteStudent(@PathVariable Long studentId) {
         log.info("删除学生，学生ID：{}", studentId);
         // 构造学生对象，设置逻辑删除标识
         User student = new User();
@@ -84,7 +95,7 @@ public class AdminStudentController {
      */
     @PutMapping("/{studentId}")
     @RequireRole(Constant.ROLE_ADMIN)
-    public Result updateStudent(
+    public Result<String> updateStudent(
             @PathVariable Long studentId,
             @RequestBody User student
     ) {
@@ -94,33 +105,4 @@ public class AdminStudentController {
         return Result.success("学生信息更新成功！");
     }
 
-    /**
-     * 8.2.5 管理员为学生分配课程
-     * 对应API：POST /api/v1/admin/students/{studentId}/courses
-     */
-    @PostMapping("/{studentId}/courses")
-    @RequireRole(Constant.ROLE_ADMIN)
-    public Result assignCourse(
-            @PathVariable Long studentId,
-            @RequestBody AssignCourseDTO assignCourseDTO
-    ) {
-        log.info("管理员为学生分配课程，学生ID：{}，分配信息：{}", studentId, assignCourseDTO);
-        adminStudentService.assignCourse(studentId, assignCourseDTO);
-        return Result.success("课程分配成功！");
-    }
-
-    /**
-     * 8.2.6 管理员移除学生课程
-     * 对应API：DELETE /api/v1/admin/students/{studentId}/courses/{courseId}
-     */
-    @DeleteMapping("/{studentId}/courses/{courseId}")
-    @RequireRole(Constant.ROLE_ADMIN)
-    public Result removeCourse(
-            @PathVariable Long studentId,
-            @PathVariable Long courseId
-    ) {
-        log.info("管理员移除学生课程，学生ID：{}，课程ID：{}", studentId, courseId);
-        adminStudentService.removeCourse(studentId, courseId);
-        return Result.success("课程移除成功！");
-    }
 }

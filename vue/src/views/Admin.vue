@@ -1,66 +1,112 @@
 <template>
-  <div class="admin-page">
-    <div class="dashboard-card">
-      <header class="dashboard-top">
-        <div class="logo-chip">
-          <span>上海理工大学Logo</span>
-        </div>
-        <div class="title-chip">大学生线上学习资源共享与问答网站</div>
-        <div class="status-chip">
-          <span class="status-label">用户状态</span>
-          <span class="status-value">{{ currentUser.role }}</span>
-        </div>
-      </header>
-
-      <div class="dashboard-body">
-        <aside class="nav-panel">
-          <button
-            v-for="module in modules"
-            :key="module.id"
-            class="nav-chip"
-            :class="{ active: module.id === activeModule.id }"
-            @click="setActive(module)"
-          >
-            {{ module.label }}
-          </button>
-        </aside>
-
-        <section class="workspace">
-          <div class="workspace-header">
-            <div>
-              <p class="workspace-label">当前模块</p>
-              <h2 class="workspace-title">{{ activeModule.label }}</h2>
-            </div>
-            <button class="primary-btn" @click="goModule(activeModule.id)">新建{{ activeModule.short }}</button>
-          </div>
-
-          <div class="workspace-content">
-            <p class="workspace-description">
-              {{ activeModule.description }}
-            </p>
-
-            <div class="meta-grid">
-              <div class="meta-card" v-for="meta in activeModule.stats" :key="meta.label">
-                <p class="meta-label">{{ meta.label }}</p>
-                <p class="meta-value">{{ meta.value }}</p>
-              </div>
-            </div>
-
-            <div class="workspace-actions">
-              <button class="ghost-btn">查看记录</button>
-              <button class="ghost-btn">导出数据</button>
-              <button class="ghost-btn">分配权限</button>
-            </div>
-          </div>
-        </section>
+  <el-container class="admin-layout">
+    <el-aside width="220px" class="aside">
+      <div class="brand">
+        <div class="brand-tag">USST · ADMIN</div>
+        <div class="brand-title">学习资源与问答后台</div>
       </div>
-    </div>
-  </div>
+      <el-menu
+        :default-active="activeNav"
+        class="menu"
+        background-color="#1f2937"
+        text-color="#d1d5db"
+        active-text-color="#fff"
+        @select="handleNavClick"
+      >
+        <el-menu-item v-for="item in navItems" :key="item.id" :index="item.id">
+          <el-icon><component :is="markRaw(item.icon)" /></el-icon>
+          <span>{{ item.label }}</span>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+
+    <el-container>
+      <el-header class="header">
+        <div class="header-left">
+          <div class="page-title">欢迎，{{ currentUser.name || '管理员' }}</div>
+          <div class="page-sub">请选择左侧菜单进入对应管理模块</div>
+        </div>
+        <div class="header-right">
+          <el-dropdown trigger="click">
+            <span class="header-user">
+              <el-avatar
+                :size="36"
+                :src="currentUser.avatar"
+                :icon="!currentUser.avatar ? UserFilled : undefined"
+              />
+              <span class="user-role">{{ currentUser.role }}</span>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </el-header>
+
+      <el-main class="main">
+        <el-row :gutter="12" class="mb-12">
+          <el-col :xs="24" :md="12">
+            <el-card shadow="hover" class="stat-card">
+              <div class="stat-label">访客数 (UV)</div>
+              <div class="stat-number">{{ uv.today }}</div>
+              <div class="stat-footer">累计 {{ uv.total }}</div>
+            </el-card>
+          </el-col>
+          <el-col :xs="24" :md="12">
+            <el-card shadow="hover" class="stat-card">
+              <div class="stat-label">浏览量 (PV)</div>
+              <div class="stat-number">{{ pv.today }}</div>
+              <div class="stat-footer">累计 {{ pv.total }}</div>
+            </el-card>
+          </el-col>
+        </el-row>
+
+        <el-card shadow="never" class="module-card">
+          <template #header>
+            <div class="header-bar">
+              <span>{{ activeModule.label }}</span>
+              <el-button type="primary" size="small" @click="goModule(activeModule.id)">
+                进入 {{ activeModule.label }}
+              </el-button>
+            </div>
+          </template>
+          <p class="module-desc">{{ activeModule.description }}</p>
+          <el-row :gutter="12">
+            <el-col
+              v-for="meta in activeModule.stats"
+              :key="meta.label"
+              :xs="24"
+              :sm="12"
+              :md="8"
+            >
+              <el-card shadow="hover" class="stat-card">
+                <div class="stat-label">{{ meta.label }}</div>
+                <div class="stat-value">{{ meta.value }}</div>
+              </el-card>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { computed, markRaw, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { authApi } from '@/api'
+import {
+  UserFilled,
+  House,
+  Collection,
+  Reading,
+  User,
+  Files,
+  ChatSquare
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
 
@@ -135,7 +181,8 @@ const modules = [
 
 const currentUser = reactive({
   name: '管理员',
-  role: 'ADMIN'
+  role: 'ADMIN',
+  avatar: ''
 })
 
 // 从 localStorage 读取用户信息
@@ -150,258 +197,220 @@ if (userInfo) {
   }
 }
 
-const activeModule = ref(modules[0])
+const activeNav = ref('home')
+const activeModuleId = ref(modules[0].id)
+const activeModule = computed(
+  () => modules.find((m) => m.id === activeModuleId.value) || modules[0]
+)
 
-const setActive = (module) => {
-  activeModule.value = module
+const navItems = computed(() => [
+  { id: 'home', label: '首页', icon: House },
+  { id: 'course', label: '课程管理', icon: Collection },
+  { id: 'teacher', label: '教师管理', icon: Reading },
+  { id: 'student', label: '学生管理', icon: User },
+  { id: 'resource', label: '资料管理', icon: Files },
+  { id: 'qa', label: '问答管理', icon: ChatSquare }
+])
+
+const uv = reactive({ today: 1280, total: '52,314', rate: 12 })
+const pv = reactive({ today: 3420, total: '183,902', rate: -3 })
+
+const homeStats = computed(() => [
+  { label: '在线用户', value: '1', trend: '已连接' },
+  { label: '访客数 (UV)', value: uv.today.toString(), trend: `累计 ${uv.total}` },
+  { label: '浏览量 (PV)', value: pv.today.toString(), trend: `累计 ${pv.total}` },
+  { label: '模块数', value: modules.length.toString(), trend: '核心功能入口' }
+])
+
+const pendingTasks = ref([
+  { id: 1, title: '审核新课程提交', deadline: '今日 18:00', status: 'pending' },
+  { id: 2, title: '处理问答举报', deadline: '明日 10:00', status: 'progress' },
+  { id: 3, title: '教师账号权限复核', deadline: '周五 17:00', status: 'pending' }
+])
+
+const schedules = [
+  { id: 1, weekday: '周三', topic: '课程审核会', time: '10:00 - 12:00' },
+  { id: 2, weekday: '周四', topic: '资源分级讨论', time: '14:00 - 16:00' },
+  { id: 3, weekday: '周五', topic: '运营周报', time: '09:00 - 09:30' }
+]
+
+const userInitial = computed(() =>
+  currentUser.name ? currentUser.name.slice(0, 1) : '管'
+)
+
+const handleNavClick = (id) => {
+  activeNav.value = id
+  activeModuleId.value = id === 'home' ? modules[0].id : id
+  if (id !== 'home') goModule(id)
 }
 
 const goModule = (id) => {
   if (id === 'course') {
-    router.push('/admin/courses')
+    router.push('/courses')
   } else if (id === 'teacher') {
     router.push('/admin/teachers')
   } else if (id === 'student') {
     router.push('/admin/students')
+  } else if (id === 'resource') {
+    router.push('/admin/resources')
+  } else if (id === 'qa') {
+    router.push('/admin/questions')
+  } else if (id === 'home') {
+    router.push('/admin')
+  } else {
+    router.push('/admin')
   }
 }
+
+const handleLogout = async () => {
+  try {
+    await authApi.logout()
+  } catch (e) {
+    console.error('退出登录失败:', e)
+  } finally {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userInfo')
+    ElMessage.success('已退出登录')
+    router.push('/')
+  }
+}
+
 </script>
 
 <style scoped>
 :global(body) {
-  margin: 0;
-  font-family: 'Montserrat', sans-serif;
-  background-color: #ecf0f3;
-  color: #181818;
+  background: #f5f7fb;
 }
 
-.admin-page {
-  width: 100%;
-  min-height: 100vh;
+.dashboard-container {
+  padding: 16px;
+}
+
+.welcome-card {
+  margin-bottom: 12px;
+}
+
+.welcome-header {
   display: flex;
-  justify-content: stretch;
-  align-items: stretch;
-  padding: 0;
-  background-color: #ecf0f3;
-}
-
-.dashboard-card {
-  width: 100%;
-  min-height: 100vh;
-  background-color: #ecf0f3;
-  border-radius: 0;
-  box-shadow: 18px 18px 40px #d1d9e6, -12px -12px 30px #f9f9f9;
-  padding: 48px clamp(20px, 3vw, 60px);
-  display: flex;
-  flex-direction: column;
-  gap: 36px;
-}
-
-.dashboard-top {
-  display: grid;
-  width: 100%;
-  grid-template-columns: minmax(200px, 1fr) minmax(320px, 2fr) minmax(200px, 1fr);
-  gap: 10px;
   align-items: center;
-}
-
-.logo-chip,
-.title-chip,
-.status-chip {
-  background-color: #ecf0f3;
-  border-radius: 999px;
-  padding: 16px 24px;
-  box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #f9f9f9;
-  text-align: center;
-  font-weight: 600;
-  color: #4b4f57;
-}
-
-.title-chip {
-  font-size: 18px;
-}
-
-.status-chip {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.status-value {
-  background-color: #4b70e2;
-  color: #fff;
-  border-radius: 20px;
-  padding: 6px 16px;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.dashboard-body {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.7fr) minmax(720px, 2.5fr);
-  gap: clamp(20px, 2vw, 40px);
-  height: 100%;
-}
-
-.nav-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.nav-chip {
-  border: none;
-  outline: none;
-  border-radius: 35px;
-  padding: 18px 24px;
-  background-color: #ecf0f3;
-  box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #f9f9f9;
-  font-size: 16px;
-  letter-spacing: 0.5px;
-  color: #4b4f57;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.nav-chip:hover {
-  transform: translateX(6px);
-}
-
-.nav-chip.active {
-  background: linear-gradient(135deg, #5773ff, #8ab4ff);
-  color: #fff;
-  box-shadow: 4px 4px 12px rgba(71, 104, 255, 0.3);
-}
-
-.workspace {
-  background-color: #ecf0f3;
-  border-radius: 32px;
-  padding: 32px;
-  box-shadow: inset 6px 6px 18px #d1d9e6, inset -6px -6px 18px #f9f9f9;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.workspace-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.workspace-label {
-  margin: 0;
-  color: #a0a5a8;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-size: 12px;
-}
-
-.workspace-title {
-  margin: 4px 0 0;
-  font-size: 28px;
-  color: #181818;
-}
-
-.primary-btn {
-  border: none;
-  border-radius: 28px;
-  padding: 12px 32px;
-  background-color: #4b70e2;
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 10px 10px 20px rgba(75, 112, 226, 0.3),
-    -6px -6px 12px rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.primary-btn:hover {
-  transform: scale(0.98);
-}
-
-.workspace-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.workspace-description {
-  margin: 0;
-  color: #4b4f57;
-  line-height: 1.6;
-  font-size: 16px;
-}
-
-.meta-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 18px;
-}
-
-.meta-card {
-  padding: 18px;
-  border-radius: 24px;
-  background-color: #ecf0f3;
-  box-shadow: 8px 8px 18px #d1d9e6, -8px -8px 18px #f9f9f9;
-}
-
-.meta-label {
-  margin: 0;
-  color: #a0a5a8;
-  font-size: 13px;
-  letter-spacing: 0.5px;
-}
-
-.meta-value {
-  margin: 6px 0 0;
-  font-size: 26px;
-  font-weight: 700;
-  color: #181818;
-}
-
-.workspace-actions {
-  display: flex;
-  flex-wrap: wrap;
   gap: 16px;
 }
 
-.ghost-btn {
-  border: none;
-  border-radius: 24px;
-  padding: 12px 26px;
-  background-color: #ecf0f3;
-  color: #4b70e2;
-  font-weight: 600;
-  box-shadow: 5px 5px 12px #d1d9e6, -5px -5px 12px #f9f9f9;
+.avatar {
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.welcome-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.greeting {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.module-card {
+  margin-top: 8px;
+}
+
+.chart-card,
+.timeline-card {
+  height: 100%;
+}
+
+.links-card {
+  margin: 12px 0;
+}
+
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.module-desc {
+  color: var(--el-text-color-regular);
+  margin-bottom: 12px;
+}
+
+.stat-card {
+  border-radius: 12px;
+}
+
+.header-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
-  transition: transform 0.2s ease;
 }
 
-.ghost-btn:hover {
-  transform: translateY(2px);
+.stat-label {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
 }
 
-@media (max-width: 1100px) {
-  .dashboard-card {
+.stat-value {
+  margin-top: 6px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--el-color-primary);
+}
+
+.stat-extra {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.module-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.chart-placeholder {
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-light);
+  border-radius: 8px;
+  border: 1px dashed var(--el-border-color);
+}
+
+.footer {
+  text-align: center;
+  color: var(--el-text-color-secondary);
+  padding: 12px 0;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .welcome-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .actions {
     width: 100%;
-  }
-
-  .dashboard-top {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-body {
-    grid-template-columns: 1fr;
-  }
-
-  .nav-panel {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .nav-chip {
-    flex: 1 1 45%;
+    justify-content: flex-start;
   }
 }
 </style>

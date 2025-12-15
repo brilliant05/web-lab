@@ -14,6 +14,7 @@
         <el-button :icon="Refresh" @click="handleRefresh">刷新</el-button>
       </div>
       <div class="operation-right">
+        <el-button type="primary" :icon="Plus" @click="handleAdd">新增学生</el-button>
         <el-button type="danger" :icon="Delete" @click="handleBatchDelete" :disabled="selectedItems.length === 0">
           批量删除
         </el-button>
@@ -59,9 +60,6 @@
           <el-button link type="primary" size="small" :icon="Edit" @click="handleEdit(row)">
             编辑
           </el-button>
-          <el-button link type="primary" size="small" @click="handleAssignCourse(row)">
-            分配课程
-          </el-button>
           <el-dropdown trigger="click" style="margin-left: 12px">
             <el-button link type="primary" size="small">
               更多<el-icon class="el-icon--right"><ArrowDown /></el-icon>
@@ -96,7 +94,7 @@
       />
     </div>
 
-    <!-- 编辑学生弹窗 -->
+    <!-- 新增/编辑学生弹窗 -->
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
@@ -115,7 +113,7 @@
             v-model="formData.username" 
             placeholder="请输入用户名" 
             :prefix-icon="User"
-            disabled
+            :disabled="formType === 'edit'"
           />
         </el-form-item>
         
@@ -145,7 +143,7 @@
             v-model="formData.studentId" 
             placeholder="请输入学号" 
             :prefix-icon="Iphone"
-            disabled
+            :disabled="formType === 'edit'"
           />
         </el-form-item>
 
@@ -217,7 +215,7 @@
 </template>
 
 <script setup>
-import { deleteStudent, getStudentList, updateStudent, updateStudentStatus } from '@/api'
+import { addStudent, deleteStudent, getStudentList, updateStudent, updateStudentStatus } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 import {
   ArrowDown, Delete, Edit,
@@ -312,6 +310,15 @@ const handleRefresh = () => {
   loadTableData()
 }
 
+// 新增学生
+const handleAdd = () => {
+  dialogTitle.value = '新增学生'
+  Object.keys(formData).forEach(key => {
+    formData[key] = ''
+  })
+  dialogVisible.value = true
+}
+
 // 批量删除
 const handleBatchDelete = () => {
   if (selectedItems.value.length === 0) {
@@ -343,12 +350,6 @@ const handleView = (row) => {
   viewDialogVisible.value = true
 }
 
-// 分配课程
-const handleAssignCourse = (row) => {
-  ElMessage.info(`为学生 ${row.realName} 分配课程`)
-  // TODO: 打开分配课程对话框
-}
-
 // 编辑学生
 const handleEdit = (row) => {
   dialogTitle.value = '编辑学生'
@@ -365,7 +366,7 @@ const handleEdit = (row) => {
   dialogVisible.value = true
 }
 
-// 提交表单
+// 提交表单（新增/编辑）
 const handleSubmit = async () => {
   if (!formRef.value) return
   
@@ -373,25 +374,47 @@ const handleSubmit = async () => {
     if (valid) {
       submitLoading.value = true
       const data = { ...formData }
-      
-      // 如果是编辑且密码为空，则移除密码字段（不修改密码）
-      if (!data.password) {
-        delete data.password
+
+      if (formData.userId) {
+        // 编辑：userId 存在
+        if (!data.password) {
+          delete data.password
+        }
+        updateStudent(data.userId, data)
+          .then(() => {
+            ElMessage.success('更新成功')
+            dialogVisible.value = false
+            loadTableData()
+          })
+          .catch(err => {
+            console.error(err)
+          })
+          .finally(() => {
+            submitLoading.value = false
+          })
+      } else {
+        // 新增：只传用户名、学号，其他可选
+        const payload = {
+          username: data.username,
+          studentId: data.studentId,
+          realName: data.realName || undefined,
+          college: data.college || undefined,
+          email: data.email || undefined,
+          phone: data.phone || undefined
+        }
+        addStudent(payload)
+          .then(() => {
+            ElMessage.success('新增成功')
+            dialogVisible.value = false
+            loadTableData()
+          })
+          .catch(err => {
+            console.error(err)
+          })
+          .finally(() => {
+            submitLoading.value = false
+          })
       }
-      
-      // 更新操作
-      updateStudent(data.userId, data)
-        .then(() => {
-          ElMessage.success('更新成功')
-          dialogVisible.value = false
-          loadTableData()
-        })
-        .catch(err => {
-          console.error(err)
-        })
-        .finally(() => {
-          submitLoading.value = false
-        })
     }
   })
 }

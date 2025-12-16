@@ -265,14 +265,23 @@ const goModule = (id) => {
 const handleLogout = async () => {
   try {
     await authApi.logout()
-  } catch (e) {
-    console.error('退出登录失败:', e)
-  } finally {
-    localStorage.removeItem('token')
-    localStorage.removeItem('userInfo')
-    ElMessage.success('已退出登录')
-    router.push('/')
+  } catch (error) {
+    console.error('退出登录失败:', error)
+    // 即使API调用失败，也要清除本地存储并退出
   }
+  
+  // 清除本地存储
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  
+  // 显示成功消息（短暂显示）
+  ElMessage.success('已退出登录')
+  
+  // 使用setTimeout确保消息显示后再跳转
+  setTimeout(() => {
+    // 使用window.location.href确保完全跳转并重置状态
+    window.location.href = '/'
+  }, 300)
 }
 
 </script>

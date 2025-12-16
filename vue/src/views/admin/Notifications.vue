@@ -30,12 +30,11 @@
       <el-table-column type="selection" width="55" />
       <el-table-column prop="notificationId" label="ID" width="80" />
       <el-table-column prop="title" label="通知标题" min-width="250" />
-      <el-table-column prop="type" label="通知类型" width="120">
+      <el-table-column prop="notificationType" label="通知类型" width="120">
         <template #default="{ row }">
-          <el-tag :type="getTypeColor(row.type)">{{ row.type }}</el-tag>
+          <el-tag :type="getTypeColor(row.notificationType)">{{ row.notificationType }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="senderName" label="发送者" width="120" />
       <el-table-column prop="isRead" label="已读状态" width="100">
         <template #default="{ row }">
           <el-tag :type="row.isRead ? 'success' : 'warning'">
@@ -43,7 +42,11 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="发布时间" width="180" />
+      <el-table-column prop="createTime" label="发布时间" width="180">
+        <template #default="{ row }">
+          {{ formatDateTime(row.createTime) }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" size="small" @click="handleView(row)">查看</el-button>
@@ -80,6 +83,7 @@
 import { ArrowDown, Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { getNotificationList } from '@/api'
 
 const searchKeyword = ref('')
 const loading = ref(false)
@@ -95,10 +99,10 @@ const tableData = ref([])
 
 const getTypeColor = (type) => {
   const colors = {
-    '系统通知': 'info',
-    '课程通知': 'primary',
-    '作业通知': 'warning',
-    '成绩通知': 'success'
+    'SYSTEM': 'info',
+    'ANSWER_REPLY': 'success',
+    'RESOURCE_AUDIT': 'warning',
+    'COURSE': 'primary'
   }
   return colors[type] || 'info'
 }
@@ -119,18 +123,8 @@ const handleAdd = () => {
 }
 
 const handleBatchDelete = () => {
-  if (selectedItems.value.length === 0) {
-    ElMessage.warning('请至少选择一项')
-    return
-  }
-  ElMessageBox.confirm(`确定要删除选中的 ${selectedItems.value.length} 项吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    ElMessage.success('删除成功')
-    loadTableData()
-  }).catch(() => {})
+  // 后端暂无删除通知接口，这里仅提示
+  ElMessage.info('当前不支持批量删除通知')
 }
 
 const handleView = (row) => {
@@ -141,15 +135,9 @@ const handleEdit = (row) => {
   ElMessage.info(`编辑通知：${row.title}`)
 }
 
-const handleDeleteSingle = (row) => {
-  ElMessageBox.confirm(`确定要删除通知"${row.title}"吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    ElMessage.success('删除成功')
-    loadTableData()
-  }).catch(() => {})
+const handleDeleteSingle = () => {
+  // 后端暂无删除通知接口，这里仅提示
+  ElMessage.info('当前不支持删除通知')
 }
 
 const handleSelectionChange = (selection) => {
@@ -167,32 +155,69 @@ const handleCurrentChange = (val) => {
   loadTableData()
 }
 
+// 日期格式化
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  try {
+    if (typeof dateTime === 'string') {
+      if (dateTime.includes(' ') && dateTime.length > 10) return dateTime
+      const d = new Date(dateTime)
+      if (isNaN(d.getTime())) return dateTime
+      return d.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).replace(/\\//g, '-')
+    }
+    const d = new Date(dateTime)
+    if (isNaN(d.getTime())) return String(dateTime)
+    return d.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).replace(/\\//g, '-')
+  } catch (e) {
+    console.error('日期格式化错误:', e, dateTime)
+    return String(dateTime)
+  }
+}
+
 const loadTableData = () => {
   loading.value = true
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockData = []
-      const types = ['系统通知', '课程通知', '作业通知', '成绩通知']
+  const params = {
+    pageNum: pagination.currentPage,
+    pageSize: pagination.pageSize,
+    notificationType: undefined,
+    isRead: undefined
+  }
 
-      for (let i = 1; i <= pagination.pageSize; i++) {
-        const index = (pagination.currentPage - 1) * pagination.pageSize + i
-        mockData.push({
-          notificationId: index,
-          title: `${types[index % types.length]} - 通知${index}`,
-          type: types[index % types.length],
-          senderName: '系统管理员',
-          isRead: index % 2 === 0,
-          createTime: new Date().toLocaleString('zh-CN')
-        })
+  return getNotificationList(params)
+    .then((res) => {
+      if (res && res.code === 200 && res.data) {
+        const page = res.data
+        tableData.value = page.records || []
+        pagination.total = page.total || 0
+      } else {
+        tableData.value = []
+        pagination.total = 0
       }
-
-      tableData.value = mockData
-      pagination.total = 60
+    })
+    .catch((error) => {
+      console.error('加载通知列表失败:', error)
+      ElMessage.error('加载通知列表失败')
+      tableData.value = []
+      pagination.total = 0
+    })
+    .finally(() => {
       loading.value = false
-      resolve()
-    }, 500)
-  })
+    })
 }
 
 onMounted(() => {

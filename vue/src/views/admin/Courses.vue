@@ -31,17 +31,22 @@
     >
       <el-table-column type="selection" width="55" />
       <el-table-column prop="courseId" label="课程ID" width="100" />
+      <el-table-column prop="courseCode" label="课程编号" width="120" />
       <el-table-column prop="courseName" label="课程名称" min-width="180" />
       <el-table-column prop="description" label="课程描述" min-width="250" show-overflow-tooltip />
-      <el-table-column prop="category" label="类别" width="120" />
+      <el-table-column prop="college" label="开课学院" width="150" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'">
-            {{ row.status === 'ACTIVE' ? '进行中' : '已结束' }}
+          <el-tag :type="row.status === 1 ? 'success' : 'info'">
+            {{ row.status === 1 ? '开放' : '关闭' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建时间" width="180" />
+      <el-table-column prop="createTime" label="创建时间" width="180">
+        <template #default="{ row }">
+          {{ formatDateTime(row.createTime) }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" size="small" :icon="Edit" @click="handleEdit(row)">
@@ -81,6 +86,7 @@
 import { ArrowDown, Delete, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { getCourseList, deleteCourse } from '@/api'
 
 // 搜索关键词
 const searchKeyword = ref('')
@@ -100,6 +106,51 @@ const pagination = reactive({
 
 // 表格数据
 const tableData = ref([])
+
+// 格式化日期时间
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  
+  try {
+    // 如果是字符串，检查格式
+    if (typeof dateTime === 'string') {
+      // 如果已经是格式化好的字符串（包含空格，格式：yyyy-MM-dd HH:mm:ss），直接返回
+      if (dateTime.includes(' ') && dateTime.length > 10) {
+        return dateTime
+      }
+      // ISO格式或其他格式，转换为本地格式
+      const date = new Date(dateTime)
+      if (isNaN(date.getTime())) {
+        return dateTime // 如果转换失败，返回原字符串
+      }
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).replace(/\//g, '-')
+    }
+    
+    // 如果是Date对象或其他格式
+    const date = new Date(dateTime)
+    if (isNaN(date.getTime())) {
+      return String(dateTime)
+    }
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).replace(/\//g, '-')
+  } catch (e) {
+    console.error('日期格式化错误:', e, dateTime)
+    return String(dateTime)
+  }
+}
 
 // 搜索
 const handleSearch = () => {
@@ -121,23 +172,30 @@ const handleAdd = () => {
 }
 
 // 批量删除
-const handleBatchDelete = () => {
+const handleBatchDelete = async () => {
   if (selectedItems.value.length === 0) {
     ElMessage.warning('请至少选择一项')
     return
   }
 
-  ElMessageBox.confirm(`确定要删除选中的 ${selectedItems.value.length} 项吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    // TODO: 调用批量删除接口
+  try {
+    await ElMessageBox.confirm(`确定要删除选中的 ${selectedItems.value.length} 项吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    // 逐个删除
+    const deletePromises = selectedItems.value.map(item => deleteCourse(item.courseId))
+    await Promise.all(deletePromises)
+
     ElMessage.success('删除成功')
     loadTableData()
-  }).catch(() => {
-    // 取消操作
-  })
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+    }
+  }
 }
 
 // 查看详情
@@ -153,18 +211,22 @@ const handleEdit = (row) => {
 }
 
 // 删除单个
-const handleDeleteSingle = (row) => {
-  ElMessageBox.confirm(`确定要删除课程"${row.courseName}"吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    // TODO: 调用删除接口
+const handleDeleteSingle = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确定要删除课程"${row.courseName}"吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    await deleteCourse(row.courseId)
     ElMessage.success('删除成功')
     loadTableData()
-  }).catch(() => {
-    // 取消操作
-  })
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+    }
+  }
 }
 
 // 表格选择变化
@@ -186,35 +248,37 @@ const handleCurrentChange = (val) => {
 }
 
 // 加载表格数据
-const loadTableData = () => {
+const loadTableData = async () => {
   loading.value = true
+  try {
+    const params = {
+      pageNum: pagination.currentPage,
+      pageSize: pagination.pageSize
+    }
 
-  // 模拟接口请求
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 模拟数据
-      const mockData = []
-      const categories = ['计算机', '数学', '物理', '英语', '管理']
-      const statuses = ['ACTIVE', 'ENDED']
+    // 如果有搜索关键词，添加到查询参数中
+    if (searchKeyword.value && searchKeyword.value.trim()) {
+      params.courseName = searchKeyword.value.trim()
+    }
 
-      for (let i = 1; i <= pagination.pageSize; i++) {
-        const index = (pagination.currentPage - 1) * pagination.pageSize + i
-        mockData.push({
-          courseId: index,
-          courseName: `课程名称 ${index}`,
-          description: `这是课程描述信息 ${index}，包含详细的课程介绍内容`,
-          category: categories[index % categories.length],
-          status: statuses[index % statuses.length],
-          createTime: new Date().toLocaleString('zh-CN')
-        })
-      }
+    const response = await getCourseList(params)
 
-      tableData.value = mockData
-      pagination.total = 100 // 模拟总数
-      loading.value = false
-      resolve()
-    }, 500)
-  })
+    if (response && response.code === 200 && response.data) {
+      const pageResult = response.data
+      tableData.value = pageResult.records || pageResult.list || []
+      pagination.total = pageResult.total || 0
+    } else {
+      tableData.value = []
+      pagination.total = 0
+    }
+  } catch (error) {
+    console.error('加载课程列表失败:', error)
+    ElMessage.error('加载课程列表失败')
+    tableData.value = []
+    pagination.total = 0
+  } finally {
+    loading.value = false
+  }
 }
 
 // 组件挂载时加载数据

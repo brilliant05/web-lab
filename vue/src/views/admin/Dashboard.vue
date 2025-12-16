@@ -122,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, markRaw, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
@@ -137,25 +137,48 @@ import {
   DataAnalysis,
   BellFilled
 } from '@element-plus/icons-vue'
+import { getStatisticsOverview } from '@/api'
 
 const router = useRouter()
 
 // 统计数据
 const statistics = reactive({
-  students: 1258,
-  teachers: 86,
-  courses: 125,
-  resources: 456
+  students: 0,
+  teachers: 0,
+  courses: 0,
+  resources: 0
 })
 
-// 快捷操作
+// 加载统计数据
+const loadStatistics = async () => {
+  try {
+    const response = await getStatisticsOverview()
+    if (response && response.code === 200 && response.data) {
+      const data = response.data
+      statistics.students = data.totalStudents || 0
+      statistics.teachers = data.totalTeachers || 0
+      statistics.courses = data.totalCourses || 0
+      statistics.resources = data.totalResources || 0
+    }
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+    // 如果接口调用失败，保持默认值0
+  }
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadStatistics()
+})
+
+// 快捷操作 - 使用markRaw标记图标组件，避免响应式包装
 const quickActions = ref([
-  { name: '新增学生', icon: User, route: '/admin/students' },
-  { name: '新增教师', icon: UserFilled, route: '/admin/teachers' },
-  { name: '新增课程', icon: Reading, route: '/admin/courses' },
-  { name: '上传资源', icon: FolderOpened, route: '/admin/resources' },
-  { name: '发布通知', icon: BellFilled, route: '/admin/notifications' },
-  { name: '数据统计', icon: DataAnalysis, route: '/admin/statistics' }
+  { name: '新增学生', icon: markRaw(User), route: '/admin/students' },
+  { name: '新增教师', icon: markRaw(UserFilled), route: '/admin/teachers' },
+  { name: '新增课程', icon: markRaw(Reading), route: '/admin/courses' },
+  { name: '上传资源', icon: markRaw(FolderOpened), route: '/admin/resources' },
+  { name: '发布通知', icon: markRaw(BellFilled), route: '/admin/notifications' },
+  { name: '数据统计', icon: markRaw(DataAnalysis), route: '/admin/statistics' }
 ])
 
 // 最新通知

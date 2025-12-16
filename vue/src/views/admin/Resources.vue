@@ -38,9 +38,13 @@
       <el-table-column prop="resourceTitle" label="资源名称" min-width="200" />
       <el-table-column prop="fileType" label="文件类型" width="100" />
       <el-table-column prop="courseName" label="所属课程" width="150" />
-      <el-table-column prop="uploadUsername" label="上传者" width="120" />
+      <el-table-column prop="uploaderName" label="上传者" width="120" />
       <el-table-column prop="downloadCount" label="下载次数" width="100" />
-      <el-table-column prop="createTime" label="上传时间" width="180" />
+      <el-table-column prop="createTime" label="上传时间" width="180">
+        <template #default="{ row }">
+          {{ formatDateTime(row.createTime) }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" size="small" @click="handleDownload(row)">下载</el-button>
@@ -77,6 +81,7 @@
 import { ArrowDown, Delete, Edit, Refresh, Search, Upload } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { getResourceList, deleteResource, downloadResource } from '@/api'
 
 const searchKeyword = ref('')
 const fileType = ref('')
@@ -90,6 +95,39 @@ const pagination = reactive({
 })
 
 const tableData = ref([])
+
+// 日期格式化
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  try {
+    if (typeof dateTime === 'string') {
+      if (dateTime.includes(' ') && dateTime.length > 10) return dateTime
+      const d = new Date(dateTime)
+      if (isNaN(d.getTime())) return dateTime
+      return d.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).replace(/\//g, '-')
+    }
+    const d = new Date(dateTime)
+    if (isNaN(d.getTime())) return String(dateTime)
+    return d.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).replace(/\//g, '-')
+  } catch (e) {
+    console.error('日期格式化错误:', e, dateTime)
+    return String(dateTime)
+  }
+}
 
 const handleSearch = () => {
   pagination.currentPage = 1
@@ -117,13 +155,27 @@ const handleBatchDelete = () => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
+    return Promise.all(selectedItems.value.map((item) => deleteResource(item.resourceId)))
+  }).then(() => {
     ElMessage.success('删除成功')
     loadTableData()
   }).catch(() => {})
 }
 
 const handleDownload = (row) => {
-  ElMessage.success(`下载资源：${row.resourceTitle}`)
+  downloadResource(row.resourceId)
+    .then((res) => {
+      const url = res?.data?.url
+      if (url) {
+        window.open(url, '_blank')
+      } else {
+        ElMessage.error('未获取到下载链接')
+      }
+    })
+    .catch((error) => {
+      console.error('下载失败:', error)
+      ElMessage.error('下载失败')
+    })
 }
 
 const handleEdit = (row) => {
@@ -135,6 +187,8 @@ const handleDeleteSingle = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
+  }).then(() => {
+    return deleteResource(row.resourceId)
   }).then(() => {
     ElMessage.success('删除成功')
     loadTableData()
@@ -159,37 +213,41 @@ const handleCurrentChange = (val) => {
 const loadTableData = () => {
   loading.value = true
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockData = []
-      const types = ['PDF', 'WORD', 'PPT', 'VIDEO']
-      const courses = ['数据结构', 'Java编程', '计算机网络', '操作系统']
+  const params = {
+    pageNum: pagination.currentPage,
+    pageSize: pagination.pageSize,
+    keyword: searchKeyword.value || undefined,
+    fileType: fileType.value || undefined
+  }
 
-      for (let i = 1; i <= pagination.pageSize; i++) {
-        const index = (pagination.currentPage - 1) * pagination.pageSize + i
-        mockData.push({
-          resourceId: index,
-          resourceTitle: `学习资源${index}`,
-          fileType: types[index % types.length],
-          courseName: courses[index % courses.length],
-          uploadUsername: `教师${index % 10}`,
-          downloadCount: Math.floor(Math.random() * 100),
-          createTime: new Date().toLocaleString('zh-CN')
-        })
+  return getResourceList(params)
+    .then((response) => {
+      if (response && response.code === 200 && response.data) {
+        const page = response.data
+        // 后端 PageResult 字段：total, records
+        tableData.value = page.records || []
+        pagination.total = page.total || 0
+      } else {
+        tableData.value = []
+        pagination.total = 0
       }
-
-      tableData.value = mockData
-      pagination.total = 150
+    })
+    .catch((error) => {
+      console.error('加载资源列表失败:', error)
+      ElMessage.error('加载资源列表失败')
+      tableData.value = []
+      pagination.total = 0
+    })
+    .finally(() => {
       loading.value = false
-      resolve()
-    }, 500)
-  })
+    })
 }
 
 onMounted(() => {
   loadTableData()
 })
 </script>
+
 
 <style scoped>
 .content-card {

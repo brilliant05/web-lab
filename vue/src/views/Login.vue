@@ -23,7 +23,7 @@
       <div v-if="mode === '登录'" class="panel-body">
         <el-form :model="loginForm" label-position="top" @submit.prevent @keydown.enter="handleLogin">
           <el-form-item label="用户名">
-            <el-input v-model="loginForm.username" placeholder="请输入用户名" />
+            <el-input v-model="loginForm.username" placeholder="请输入用户名" @input="clearLoginError" />
           </el-form-item>
           <el-form-item label="密码">
             <el-input
@@ -31,8 +31,13 @@
             type="password"
               show-password
               placeholder="请输入密码"
+              @input="clearLoginError"
             />
           </el-form-item>
+          <div v-if="loginError" class="login-error">
+            <el-icon class="error-icon"><WarningFilled /></el-icon>
+            <span>{{ loginError }}</span>
+          </div>
           <div class="panel-actions">
             <el-button type="primary" size="large" class="w-full" :loading="isLoading" @click="handleLogin">
               {{ isLoading ? '登录中...' : '进入后台' }}
@@ -75,7 +80,7 @@
             >
               {{ isRegisterLoading ? '注册中...' : '创建账号' }}
             </el-button>
-        </div>
+          </div>
         </el-form>
       </div>
     </div>
@@ -86,6 +91,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { WarningFilled } from '@element-plus/icons-vue'
 import { authApi } from '../api/index'
 
 const router = useRouter()
@@ -106,8 +112,14 @@ const loginForm = reactive({
 })
 
 const isLoading = ref(false)
+const loginError = ref('')
 const uv = reactive({ today: 128 })
 const pv = reactive({ today: 326 })
+
+// 清除登录错误信息
+const clearLoginError = () => {
+  loginError.value = ''
+}
 
 const handleRegister = async () => {
   if (!registerForm.username || !registerForm.username.trim()) {
@@ -168,8 +180,11 @@ const handleRegister = async () => {
 }
 
 const handleLogin = async () => {
+  // 清除之前的错误信息
+  loginError.value = ''
+  
   if (!loginForm.username || !loginForm.password) {
-    ElMessage.warning('请输入用户名和密码')
+    loginError.value = '请输入用户名和密码'
     return
   }
 
@@ -183,7 +198,7 @@ const handleLogin = async () => {
     if (response && response.code === 200) {
       const data = response.data
       if (!data) {
-        ElMessage.error('登录失败：响应数据为空')
+        loginError.value = '登录失败：响应数据为空'
         return
       }
 
@@ -211,14 +226,26 @@ const handleLogin = async () => {
       }, 300)
     } else {
       const errorMsg = response?.message || '登录失败：响应数据格式错误'
-      ElMessage.error(errorMsg)
+      loginError.value = errorMsg
     }
   } catch (error) {
-    const msg =
-      error?.response?.data?.message ||
-      error?.message ||
-      '用户名或密码错误'
-    ElMessage.error(msg)
+    // 从错误响应中提取错误信息
+    let errorMsg = '用户名或密码错误'
+    
+    if (error?.response?.data) {
+      const errorData = error.response.data
+      // 如果是业务错误码，使用业务错误消息
+      if (errorData.code === 401 || errorData.message) {
+        errorMsg = errorData.message || '用户名或密码错误'
+      } else if (errorData.message) {
+        errorMsg = errorData.message
+      }
+    } else if (error?.message) {
+      errorMsg = error.message
+    }
+    
+    // 统一显示为"用户名或密码错误"
+    loginError.value = '用户名或密码错误'
   } finally {
     isLoading.value = false
   }
@@ -306,6 +333,35 @@ const handleLogin = async () => {
 
 .panel-actions {
   margin-top: 12px;
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background-color: #fef0f0;
+  border: 1px solid #fde2e2;
+  border-radius: 8px;
+  color: #f56c6c;
+  font-size: 14px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.error-icon {
+  font-size: 16px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .w-full {

@@ -40,6 +40,53 @@ export const updateStudentStatus = (studentId, data) =>
 export const deleteStudent = (studentId) =>
   http.delete(`/admin/students/${studentId}`)
 
+// 统计数据接口
+export const getStatisticsOverview = () =>
+  http.get('/admin/statistics/overview')
+
+// 课程管理接口
+export const getCourseList = (params = {}) =>
+  http.get('/courses', { params })
+
+export const getCourseById = (courseId) =>
+  http.get(`/courses/${courseId}`)
+
+export const addCourse = (data) =>
+  http.post('/courses', data)
+
+export const updateCourse = (courseId, data) =>
+  http.put(`/courses/${courseId}`, data)
+
+export const deleteCourse = (courseId) =>
+  http.delete(`/courses/${courseId}`)
+
+// 资源管理接口
+export const getResourceList = (params = {}) =>
+  http.get('/resources', { params })
+
+export const getResourceDetail = (resourceId) =>
+  http.get(`/resources/${resourceId}`)
+
+export const deleteResource = (resourceId) =>
+  http.delete(`/resources/${resourceId}`)
+
+export const downloadResource = (resourceId) =>
+  http.get(`/resources/${resourceId}/download`)
+
+// 问答管理接口
+export const getQuestionList = (params = {}) =>
+  http.get('/questions', { params })
+
+export const deleteQuestion = (questionId) =>
+  http.delete(`/questions/${questionId}`)
+
+// 通知管理接口
+export const getNotificationList = (params = {}) =>
+  http.get('/notifications', { params })
+
+export const deleteNotification = (notificationId) =>
+  http.delete(`/notifications/${notificationId}`)
+
 // 便于按需扩展其它模块
 export default {
   authApi

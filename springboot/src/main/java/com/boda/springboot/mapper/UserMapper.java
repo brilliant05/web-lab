@@ -66,4 +66,18 @@ public interface UserMapper {
      */
     void update(User user);
 
+    /**
+     * 统计学生总数
+     * @return 学生总数
+     */
+    @Select("SELECT COUNT(*) FROM user WHERE role = 'STUDENT' AND is_deleted = 0")
+    Integer countStudents();
+
+    /**
+     * 统计教师总数
+     * @return 教师总数
+     */
+    @Select("SELECT COUNT(*) FROM user WHERE role = 'TEACHER' AND is_deleted = 0")
+    Integer countTeachers();
+
 }

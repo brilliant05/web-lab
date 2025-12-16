@@ -90,36 +90,67 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { User, UserFilled, Reading, FolderOpened } from '@element-plus/icons-vue'
+import { getStatisticsOverview } from '@/api'
 
 // 统计数据
 const stats = ref([
   {
     label: '学生总数',
-    value: 1258,
+    value: 0,
     icon: User,
     color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
   },
   {
     label: '教师总数',
-    value: 86,
+    value: 0,
     icon: UserFilled,
     color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
   },
   {
     label: '课程总数',
-    value: 125,
+    value: 0,
     icon: Reading,
     color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
   },
   {
     label: '资源总数',
-    value: 456,
+    value: 0,
     icon: FolderOpened,
     color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
   }
 ])
+
+// 加载统计数据
+const loadStatistics = async () => {
+  try {
+    const response = await getStatisticsOverview()
+    if (response && response.code === 200 && response.data) {
+      const data = response.data
+      // 更新统计数据
+      const studentStat = stats.value.find(s => s.label === '学生总数')
+      if (studentStat) studentStat.value = data.totalStudents || 0
+      
+      const teacherStat = stats.value.find(s => s.label === '教师总数')
+      if (teacherStat) teacherStat.value = data.totalTeachers || 0
+      
+      const courseStat = stats.value.find(s => s.label === '课程总数')
+      if (courseStat) courseStat.value = data.totalCourses || 0
+      
+      const resourceStat = stats.value.find(s => s.label === '资源总数')
+      if (resourceStat) resourceStat.value = data.totalResources || 0
+    }
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+    // 如果接口调用失败，保持默认值0
+  }
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadStatistics()
+})
 
 // 热门课程
 const hotCourses = ref([

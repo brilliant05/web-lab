@@ -29,9 +29,13 @@ http.interceptors.response.use(response => {
     if(res.code === 200){
         return res;  // 成功
     } else if(res.code === 401){
-        ElMessage.error(res.message || '未登录或登录已过期');
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        // 检查是否是登录接口，登录接口的错误由登录页面自己处理
+        const isLoginRequest = response.config?.url?.includes('/auth/login');
+        if (!isLoginRequest) {
+            ElMessage.error(res.message || '未登录或登录已过期');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
         return Promise.reject(res);
     } else {
         ElMessage.error(res.message || '操作失败');
@@ -43,10 +47,15 @@ http.interceptors.response.use(response => {
         const status = error.response.status;
         const data = error.response.data;
         
+        // 检查是否是登录接口，登录接口的错误由登录页面自己处理
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        
         if(status === 401){
-            ElMessage.error(data.message || '登录过期，请重新登录');
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+            if (!isLoginRequest) {
+                ElMessage.error(data.message || '登录过期，请重新登录');
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
         } else if(status === 403){
             ElMessage.error('没有权限访问');
         } else if(status === 404){
@@ -54,12 +63,22 @@ http.interceptors.response.use(response => {
         } else if(status === 500){
             ElMessage.error(data.message || '服务器内部错误');
         } else {
-            ElMessage.error(data.message || '请求失败');
+            if (!isLoginRequest) {
+                ElMessage.error(data.message || '请求失败');
+            }
         }
     } else if(error.request){
-        ElMessage.error('网络错误，请检查网络连接');
+        // 检查是否是登录请求
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        if (!isLoginRequest) {
+            ElMessage.error('网络错误，请检查网络连接');
+        }
     } else {
-        ElMessage.error(error.message || '请求配置错误');
+        // 检查是否是登录请求
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        if (!isLoginRequest) {
+            ElMessage.error(error.message || '请求配置错误');
+        }
     }
     
     return Promise.reject(error);

@@ -28,11 +28,15 @@
     >
       <el-table-column type="selection" width="55" />
       <el-table-column prop="questionId" label="ID" width="80" />
-      <el-table-column prop="title" label="问题标题" min-width="250" />
+      <el-table-column prop="questionTitle" label="问题标题" min-width="250" />
       <el-table-column prop="courseName" label="所属课程" width="150" />
-      <el-table-column prop="askerName" label="提问者" width="120" />
+      <el-table-column prop="studentName" label="提问者" width="120" />
       <el-table-column prop="answerCount" label="回答数" width="100" />
-      <el-table-column prop="createTime" label="提问时间" width="180" />
+      <el-table-column prop="createTime" label="提问时间" width="180">
+        <template #default="{ row }">
+          {{ formatDateTime(row.createTime) }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" size="small" @click="handleView(row)">查看</el-button>
@@ -68,6 +72,7 @@
 import { ArrowDown, Delete, Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { getQuestionList, deleteQuestion } from '@/api'
 
 const searchKeyword = ref('')
 const loading = ref(false)
@@ -112,14 +117,17 @@ const handleView = (row) => {
 }
 
 const handleDeleteSingle = (row) => {
-  ElMessageBox.confirm(`确定要删除问题"${row.title}"吗？`, '提示', {
+  ElMessageBox.confirm(`确定要删除问题"${row.questionTitle}"吗？`, '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    ElMessage.success('删除成功')
-    loadTableData()
-  }).catch(() => {})
+  })
+    .then(() => deleteQuestion(row.questionId))
+    .then(() => {
+      ElMessage.success('删除成功')
+      loadTableData()
+    })
+    .catch(() => {})
 }
 
 const handleSelectionChange = (selection) => {
@@ -137,32 +145,65 @@ const handleCurrentChange = (val) => {
   loadTableData()
 }
 
-const loadTableData = () => {
+// 日期格式化
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  try {
+    if (typeof dateTime === 'string') {
+      if (dateTime.includes(' ') && dateTime.length > 10) return dateTime
+      const d = new Date(dateTime)
+      if (isNaN(d.getTime())) return dateTime
+      return d.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).replace(/\\//g, '-')
+    }
+    const d = new Date(dateTime)
+    if (isNaN(d.getTime())) return String(dateTime)
+    return d.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).replace(/\\//g, '-')
+  } catch (e) {
+    console.error('日期格式化错误:', e, dateTime)
+    return String(dateTime)
+  }
+}
+
+const loadTableData = async () => {
   loading.value = true
+  const params = {
+    pageNum: pagination.currentPage,
+    pageSize: pagination.pageSize,
+    keyword: searchKeyword.value || undefined
+  }
 
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockData = []
-      const courses = ['数据结构', 'Java编程', '计算机网络', '操作系统']
-
-      for (let i = 1; i <= pagination.pageSize; i++) {
-        const index = (pagination.currentPage - 1) * pagination.pageSize + i
-        mockData.push({
-          questionId: index,
-          title: `如何学习${courses[index % courses.length]}？`,
-          courseName: courses[index % courses.length],
-          askerName: `学生${index % 20}`,
-          answerCount: Math.floor(Math.random() * 10),
-          createTime: new Date().toLocaleString('zh-CN')
-        })
-      }
-
-      tableData.value = mockData
-      pagination.total = 80
-      loading.value = false
-      resolve()
-    }, 500)
-  })
+  try {
+    const res = await getQuestionList(params)
+    if (res && res.code === 200 && res.data) {
+      const page = res.data
+      tableData.value = page.records || []
+      pagination.total = page.total || 0
+    } else {
+      tableData.value = []
+      pagination.total = 0
+    }
+  } catch (error) {
+    console.error('加载问题列表失败:', error)
+    ElMessage.error('加载问题列表失败')
+    tableData.value = []
+    pagination.total = 0
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {

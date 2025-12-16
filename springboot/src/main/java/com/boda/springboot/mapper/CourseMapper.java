@@ -68,4 +68,11 @@ public interface CourseMapper {
      * @param courseId 课程ID
      */
     void deleteById(Long courseId);
+
+    /**
+     * 统计课程总数
+     * @return 课程总数
+     */
+    @Select("SELECT COUNT(*) FROM course WHERE is_deleted = 0")
+    Integer countCourses();
 }

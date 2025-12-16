@@ -5,6 +5,7 @@ import com.boda.springboot.entity.Resource;
 import com.boda.springboot.vo.ResourceVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -63,4 +64,11 @@ public interface ResourceMapper {
      * 按ID联查详情（包含课程名与上传者姓名）
      */
     ResourceVO selectDetailById(@Param("resourceId") Long resourceId);
+
+    /**
+     * 统计资源总数
+     * @return 资源总数
+     */
+    @Select("SELECT COUNT(*) FROM resource WHERE is_deleted = 0 AND status = 1")
+    Integer countResources();
 }

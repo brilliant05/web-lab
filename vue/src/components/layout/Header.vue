@@ -26,9 +26,10 @@
 
 <script setup>
 import { ArrowDown } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { authApi } from '@/api'
 
 const router = useRouter()
 
@@ -55,21 +56,27 @@ const handleCommand = (command) => {
 }
 
 // 退出登录
-const handleLogout = () => {
-  ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    ElMessage.success('退出成功')
-    // 清除登录信息
-    localStorage.removeItem('token')
-    localStorage.removeItem('userInfo')
-    // 跳转到登录页
-    router.push('/')
-  }).catch(() => {
-    // 取消操作
-  })
+const handleLogout = async () => {
+  try {
+    // 调用后端退出登录API
+    await authApi.logout()
+  } catch (error) {
+    console.error('退出登录失败:', error)
+    // 即使API调用失败，也要清除本地存储并退出
+  }
+  
+  // 清除登录信息
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  
+  // 显示成功消息（短暂显示）
+  ElMessage.success('已退出登录')
+  
+  // 使用setTimeout确保消息显示后再跳转
+  setTimeout(() => {
+    // 使用window.location.href确保完全跳转并重置状态
+    window.location.href = '/'
+  }, 300)
 }
 </script>
 

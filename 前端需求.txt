@@ -1,0 +1,114 @@
+你是一个资深前端工程师。请在我现有的 Vue3 + Vite + Element Plus + Pinia + VueRouter4 项目里，新建「学生端 Student 模块」的整体 UI 骨架（先不接后端，全部用 mock 数据），目标是让我能快速预览学生端整体界面与交互风格。
+
+【重要约束】
+1) 不要破坏/重构我现有管理员端代码；只新增 student 模块相关文件与路由。
+2) UI 统一使用 Element Plus 组件（Container/Menu/Table/Form/Upload/Tabs/Badge/Dropdown/Card 等），尽量组件化拆分（页面=组合组件）。
+3) 所有页面先用 mock 数据渲染，后续再替换为 API 请求；但要预留 api 文件与调用位置（写 TODO 即可）。
+4) 视觉风格与我现有后台管理风格保持一致：顶部导航 + 左侧菜单 + 内容区卡片化；支持侧边栏折叠、基础响应式。
+5) 路由前缀必须是 /student，并为每个路由加 meta.requiresAuth=true、meta.role='STUDENT'（后续配合路由守卫）。
+
+【需要创建的学生端页面（都先做 UI + mock）】
+- /student/home 首页
+- /student/courses 课程列表
+- /student/resources 资源浏览
+- /student/resources/:id 资源详情
+- /student/upload 资源上传
+- /student/questions 问答广场
+- /student/questions/:id 问题详情
+- /student/ask 提问页
+- /student/profile 个人中心（内部再分：我的资源 / 我的提问 / 我的消息 / 账号设置，可用 tabs 或左侧二级菜单+子路由）
+
+【目录建议（如项目结构不同可调整，但要清晰）】
+- src/layouts/student/StudentLayout.vue
+- src/layouts/student/components/StudentSidebar.vue
+- src/layouts/student/components/StudentHeader.vue（含通知 dropdown + 未读 badge + 用户下拉）
+- src/views/student/Home.vue
+- src/views/student/CourseList.vue
+- src/views/student/ResourceList.vue
+- src/views/student/ResourceDetail.vue
+- src/views/student/UploadResource.vue
+- src/views/student/QuestionList.vue
+- src/views/student/QuestionDetail.vue
+- src/views/student/AskQuestion.vue
+- src/views/student/profile/ProfileLayout.vue（或 Profile.vue）
+- src/views/student/profile/MyResources.vue
+- src/views/student/profile/MyQuestions.vue
+- src/views/student/profile/MyMessages.vue
+- src/views/student/profile/AccountSettings.vue
+
+【通用可复用组件（请实现最少但够用的版本）】
+- src/components/student/StatCard.vue（首页统计卡片：图标+标题+数值）
+- src/components/student/SearchBar.vue（统一搜索条：keyword + filters slot + 操作按钮 slot）
+- src/components/student/ResourceCard.vue（资源卡片：标题/简介/课程/上传者/时间/下载量/收藏按钮）
+- src/components/student/QuestionCard.vue（问答卡片：标题/课程/提问者/时间/回答数/已回答tag）
+- src/components/student/EmptyState.vue（空状态）
+
+【StudentLayout 结构要求】
+- 顶部 Header：左侧 Logo/系统名；中间 Breadcrumb（可选）；右侧：消息铃铛（Badge 显示未读数）+ 用户头像下拉（个人中心/退出）
+- 左侧 Sidebar：菜单项=首页、课程、资源、上传、问答广场、提问、个人中心
+- 主内容区：router-view 包裹在 el-card 或留出 padding，整体简洁
+- Sidebar 支持折叠（el-menu collapse）；Header 提供折叠按钮
+
+【每个页面的 UI 细化（先做可看）】
+1) Home 首页
+- 顶部 3~4 个统计卡片（我的课程数、我的收藏数、我的上传数、未读消息）
+- 下方左右两栏：最新资源列表（table 或 list）+ 最新问答列表（list）
+- 每项可点击跳转资源详情/问题详情
+
+2) CourseList 课程列表
+- 顶部 SearchBar：关键字、学院/教师筛选（mock 下拉）
+- 下方用 el-card 网格展示课程（封面占位图/课程名/教师/学院/进入资源按钮）
+
+3) ResourceList 资源浏览
+- 左侧课程分类树（el-tree，mock）
+- 右侧：SearchBar（关键字、文件类型、排序：最新/下载量/收藏量）
+- 列表用 ResourceCard 或 table；支持分页（el-pagination mock）
+- 每条：进入详情、收藏/取消收藏按钮（只做前端状态切换）
+
+4) ResourceDetail 资源详情
+- 顶部：标题 + 标签 + 统计信息（下载数/收藏数/大小/类型）
+- 中部：简介 + 上传者信息
+- 右侧或底部：主要操作按钮（下载、收藏、举报、分享）
+- 预览区：PDF/图片用占位（后续接真实预览）
+
+5) UploadResource 资源上传
+- el-upload（拖拽）+ 文件列表
+- 表单：标题、简介、所属课程、标签（可多选/可输入）
+- 提交按钮：只做校验+message 提示+mock 列表更新（可选）
+
+6) QuestionList 问答广场
+- SearchBar：关键字、课程筛选、状态筛选（已回答/未回答）
+- 列表用 QuestionCard；分页
+- 顶部提供“我要提问”按钮跳 /student/ask
+
+7) QuestionDetail 问题详情
+- 问题标题/课程/提问者/时间/正文（富文本先用普通展示）
+- 回答列表：每条回答卡片（回答者/时间/内容/点赞按钮 mock）
+- 学生端不提供“回答输入框”（除非你发现我项目允许学生回答）
+
+8) AskQuestion 提问页
+- 表单：所属课程、标题、内容（用 textarea 或简易富文本占位）、图片上传（最多3张 mock）
+- 提交后跳转到 /student/questions 并提示成功（mock）
+
+9) Profile 个人中心
+- 左侧二级菜单或 Tabs：我的资源/我的提问/我的消息/账号设置
+- 我的资源：table（可编辑/删除按钮 mock）
+- 我的提问：table（未回答可编辑/删除，已回答只查看）
+- 我的消息：通知列表（支持全部已读、单条已读 mock），与 Header 未读数联动
+- 账号设置：头像上传、邮箱/手机号、修改密码表单（只做前端校验和提示）
+
+【Pinia store（最少实现）】
+- useUserStore：userInfo、role、token（从 localStorage 恢复）
+- useNotificationStore：unreadCount、list（mock）、markRead/markAllRead
+- 让 Header 的 Badge 未读数来自 store，并在“我的消息”页面操作会实时变化
+
+【路由与守卫】
+- 在 router/index.js 中新增 /student 路由树，component=StudentLayout，children 对应上述页面
+- 若项目已有全局守卫：补充对 meta.role === 'STUDENT' 的判断（token 无则去 /login；角色不符则跳各自首页）
+- 若没有守卫：请新增一个最简守卫实现（不影响 admin）
+
+【交付标准】
+- 我启动项目后，访问 /student/home 能看到完整布局、菜单可跳转所有学生页面、每页都有 mock 数据与基本交互（收藏/已读/分页等前端演示）。
+- 代码结构清晰，组件命名统一，页面不写一大坨重复 UI。
+
+现在开始改代码：创建文件、补路由、补组件、补 mock 数据。不要写解释性长文，代码优先。

@@ -73,6 +73,19 @@ export const deleteResource = (resourceId) =>
 export const downloadResource = (resourceId) =>
   http.get(`/resources/${resourceId}/download`)
 
+export const collectResource = (resourceId) =>
+  http.post(`/resources/${resourceId}/collect`)
+
+export const uncollectResource = (resourceId) =>
+  http.delete(`/resources/${resourceId}/collect`)
+
+export const uploadResource = (formData) =>
+  http.post('/resources', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+
 // 问答管理接口
 export const getQuestionList = (params = {}) =>
   http.get('/questions', { params })
@@ -83,6 +96,15 @@ export const deleteQuestion = (questionId) =>
 // 通知管理接口
 export const getNotificationList = (params = {}) =>
   http.get('/notifications', { params })
+
+export const getUnreadCount = () =>
+  http.get('/notifications/unread-count')
+
+export const markNotificationAsRead = (notificationId) =>
+  http.put(`/notifications/${notificationId}/read`)
+
+export const markAllNotificationsAsRead = () =>
+  http.put('/notifications/read-all')
 
 export const deleteNotification = (notificationId) =>
   http.delete(`/notifications/${notificationId}`)

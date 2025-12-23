@@ -9,7 +9,10 @@ const http = axios.create({
 //request拦截器
 //自动对请求发起前进行一些处理
 http.interceptors.request.use(config => {
-    config.headers['content-type'] = 'application/json;charset=UTF-8';
+    // 如果是 FormData，不设置 Content-Type，让浏览器自动设置（包含 boundary）
+    if (!(config.data instanceof FormData)) {
+        config.headers['content-type'] = 'application/json;charset=UTF-8';
+    }
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`; // 触发后端拦截器校验

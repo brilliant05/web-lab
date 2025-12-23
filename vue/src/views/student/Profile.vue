@@ -372,6 +372,7 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { fixImageUrl } from '@/utils/image'
 import {
   Edit,
   UserFilled,
@@ -493,13 +494,43 @@ const notificationPagination = reactive({
 const loadUserInfo = async () => {
   try {
     const response = await getCurrentUser()
+    console.log('loadUserInfo 获取到的用户信息:', response)
     if (response && response.code === 200 && response.data) {
       userInfo.value = response.data
       // 初始化表单数据
       userForm.email = userInfo.value.email || ''
       userForm.phone = userInfo.value.phone || ''
-      userForm.avatarUrl = userInfo.value.avatarUrl || ''
+      userForm.avatarUrl = fixImageUrl(userInfo.value.avatarUrl || '')
       userForm.profile = userInfo.value.profile || ''
+      
+      // 修复头像URL（如果有的话）
+      if (userInfo.value.avatarUrl) {
+        userInfo.value.avatarUrl = fixImageUrl(userInfo.value.avatarUrl)
+      }
+      
+      // 同步更新 localStorage，确保其他组件也能获取最新数据
+      try {
+        const userInfoStr = localStorage.getItem('userInfo')
+        if (userInfoStr) {
+          const user = JSON.parse(userInfoStr)
+          // 合并更新，保留token等信息
+          Object.assign(user, {
+            realName: userInfo.value.realName,
+            username: userInfo.value.username,
+            email: userInfo.value.email,
+            phone: userInfo.value.phone,
+            avatarUrl: userInfo.value.avatarUrl,
+            profile: userInfo.value.profile,
+            role: userInfo.value.role
+          })
+          localStorage.setItem('userInfo', JSON.stringify(user))
+          console.log('loadUserInfo 已更新 localStorage:', user)
+          // 触发自定义事件，通知其他组件更新
+          window.dispatchEvent(new CustomEvent('userInfoUpdated'))
+        }
+      } catch (err) {
+        console.error('更新 localStorage 失败:', err)
+      }
     }
   } catch (error) {
     console.error('加载用户信息失败:', error)
@@ -583,21 +614,49 @@ const beforeAvatarUpload = (file) => {
 
 // 上传头像
 const handleAvatarUpload = async (options) => {
-  const file = options.file
+  const { file, onSuccess, onError } = options
   const formData = new FormData()
   formData.append('file', file)
 
   try {
     const response = await uploadAvatar(formData)
+    console.log('头像上传响应:', response)
     if (response && response.code === 200 && response.data) {
-      userForm.avatarUrl = response.data.url
+      const avatarUrl = response.data.url
+      const fixedAvatarUrl = fixImageUrl(avatarUrl) // 修复HTTPS证书问题
+      console.log('头像URL (原始):', avatarUrl)
+      console.log('头像URL (修复后):', fixedAvatarUrl)
+      
+      // 先更新前端显示，让用户立即看到（使用修复后的URL）
+      userForm.avatarUrl = fixedAvatarUrl
+      userInfo.value.avatarUrl = fixedAvatarUrl
+      
+      // 立即保存头像URL到数据库（保存原始URL，后端配置已改为HTTP，新上传的会直接是HTTP）
+      try {
+        const updateResponse = await updateUserProfile({ avatarUrl })
+        console.log('保存头像URL响应:', updateResponse)
+        if (updateResponse && updateResponse.code === 200) {
+          // 重新从后端获取最新的用户信息（包括头像URL）
+          await loadUserInfo()
+          console.log('用户信息已重新加载，头像URL:', userInfo.value.avatarUrl)
+        }
+      } catch (updateError) {
+        console.error('保存头像URL到数据库失败:', updateError)
+        ElMessage.warning('头像上传成功，但保存到数据库失败，请手动保存')
+      }
+      
+      if (onSuccess) onSuccess(response.data)
       ElMessage.success('头像上传成功')
     } else {
-      ElMessage.error(response?.message || '头像上传失败')
+      const msg = response?.message || '头像上传失败'
+      ElMessage.error(msg)
+      if (onError) onError(new Error(msg))
     }
   } catch (error) {
     console.error('上传头像失败:', error)
-    ElMessage.error(error?.response?.data?.message || '头像上传失败')
+    const msg = error?.response?.data?.message || '头像上传失败'
+    ElMessage.error(msg)
+    if (onError) onError(error)
   }
 }
 

@@ -3,8 +3,10 @@ package com.boda.springboot.service.impl;
 import com.boda.springboot.common.PageResult;
 import com.boda.springboot.dto.NotificationPageQueryDTO;
 import com.boda.springboot.entity.Notification;
+import com.boda.springboot.entity.User;
 import com.boda.springboot.exception.ServiceException;
 import com.boda.springboot.mapper.NotificationMapper;
+import com.boda.springboot.mapper.UserMapper;
 import com.boda.springboot.service.NotificationService;
 import com.boda.springboot.vo.NotificationVO;
 import com.boda.springboot.websocket.NotificationWebSocket;
@@ -27,6 +29,9 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Autowired
     private NotificationMapper notificationMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public PageResult pageQuery(NotificationPageQueryDTO queryDTO, Long userId) {
@@ -74,14 +79,42 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public void createAnswerNotification(Long studentId, Long questionId, String questionTitle) {
-        log.info("创建问题被回答通知 - 学生ID: {}, 问题ID: {}", studentId, questionId);
+    public void createAnswerNotification(Long studentId, Long teacherId, Long questionId, String questionTitle) {
+        log.info("创建问题被回答通知 - 学生ID: {}, 教师ID: {}, 问题ID: {}", studentId, teacherId, questionId);
+
+        // 查询学生信息
+        User student = userMapper.selectById(studentId);
+        if (student == null) {
+            log.warn("学生不存在，无法创建通知 - 学生ID: {}", studentId);
+            return;
+        }
+
+        // 查询教师信息
+        User teacher = userMapper.selectById(teacherId);
+        if (teacher == null) {
+            log.warn("教师不存在，无法创建通知 - 教师ID: {}", teacherId);
+            return;
+        }
+
+        // 获取学生姓名（优先使用真实姓名，否则使用用户名）
+        String studentName = student.getRealName() != null && !student.getRealName().trim().isEmpty() 
+            ? student.getRealName() 
+            : student.getUsername();
+
+        // 获取教师姓名（优先使用真实姓名，否则使用用户名）
+        String teacherName = teacher.getRealName() != null && !teacher.getRealName().trim().isEmpty() 
+            ? teacher.getRealName() 
+            : teacher.getUsername();
+
+        // 生成通知内容，格式：同学某某某 你的什么什么问题 被哪个老师回答
+        String content = String.format("同学%s，你的问题「%s」已被%s回答", 
+            studentName, questionTitle, teacherName);
 
         Notification notification = new Notification();
         notification.setUserId(studentId);
         notification.setNotificationType("ANSWER_REPLY");
         notification.setTitle("您的问题有新回答");
-        notification.setContent("您提问的《" + questionTitle + "》已被教师回答，点击查看详情");
+        notification.setContent(content);
         notification.setRelatedId(questionId);
         notification.setRelatedType("QUESTION");
 

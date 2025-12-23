@@ -1,7 +1,9 @@
 <template>
   <el-dropdown @command="handleCommand" trigger="click">
     <div class="user-trigger">
-      <el-avatar :size="36" :src="userInfo.avatar" />
+      <el-avatar :size="36" :src="userInfo.avatarUrl">
+        <el-icon><User /></el-icon>
+      </el-avatar>
       <span class="username">{{ userInfo.name }}</span>
       <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
     </div>
@@ -21,34 +23,55 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowDown, User, SwitchButton } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { authApi } from '@/api'
+import { fixImageUrl } from '@/utils/image'
 
 const router = useRouter()
 
 // 用户信息
 const userInfo = ref({
   name: '学生',
-  avatar: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+  avatarUrl: ''
 })
 
 // 从localStorage读取用户信息
-onMounted(() => {
+const loadUserInfo = () => {
   const userInfoStr = localStorage.getItem('userInfo')
   if (userInfoStr) {
     try {
       const user = JSON.parse(userInfoStr)
       userInfo.value.name = user.realName || user.username || '学生'
-      if (user.avatar) {
-        userInfo.value.avatar = user.avatar
+      if (user.avatarUrl) {
+        userInfo.value.avatarUrl = fixImageUrl(user.avatarUrl)
+        console.log('UserDropdown 加载头像URL:', userInfo.value.avatarUrl)
+      } else {
+        console.log('UserDropdown 未找到头像URL')
       }
     } catch (e) {
       console.error('解析用户信息失败:', e)
     }
+  } else {
+    console.log('UserDropdown localStorage 中没有用户信息')
   }
+}
+
+const handleUserInfoUpdate = () => {
+  console.log('UserDropdown 收到 userInfoUpdated 事件')
+  loadUserInfo()
+}
+
+onMounted(() => {
+  loadUserInfo()
+  // 监听自定义事件，实时更新头像
+  window.addEventListener('userInfoUpdated', handleUserInfoUpdate)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('userInfoUpdated', handleUserInfoUpdate)
 })
 
 // 处理下拉菜单命令

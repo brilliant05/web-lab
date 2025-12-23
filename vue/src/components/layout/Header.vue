@@ -3,11 +3,14 @@
     <div class="header-left">
       <img src="@/assets/logo.png" alt="上海理工大学" class="school-logo" />
     </div>
+    <div class="header-center">
+      <span class="system-title">大学生线上资源与问答管理系统</span>
+    </div>
     <div class="header-right">
       <el-dropdown @command="handleCommand">
         <div class="user-info">
-          <el-avatar :size="35" :src="userInfo.avatar" />
-          <span class="username">{{ userInfo.name }}</span>
+          <el-avatar :size="60" :src="userInfo.avatarUrl || defaultAvatar" />
+          <span class="username">{{ userInfo.username }}</span>
           <el-icon class="el-icon--right">
             <ArrowDown />
           </el-icon>
@@ -25,19 +28,28 @@
 </template>
 
 <script setup>
+import { authApi } from '@/api'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { authApi } from '@/api'
 
 const router = useRouter()
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 // 用户信息
-const userInfo = ref({
-  name: '管理员',
-  role: '系统管理员',
-  avatar: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+const userInfo = ref(JSON.parse(localStorage.getItem('userInfo')) || {})
+
+const updateUserInfo = () => {
+  userInfo.value = JSON.parse(localStorage.getItem('userInfo')) || {}
+}
+
+onMounted(() => {
+  window.addEventListener('userInfoUpdated', updateUserInfo)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('userInfoUpdated', updateUserInfo)
 })
 
 // 顶部用户下拉菜单操作
@@ -90,11 +102,25 @@ const handleLogout = async () => {
   color: white;
   padding: 0 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .header-left {
   display: flex;
   align-items: center;
+}
+
+.header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.system-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .header-left .school-logo {
@@ -112,6 +138,12 @@ const handleLogout = async () => {
 .header-right .username {
   font-size: 14px;
   color: white;
+}
+
+@media screen and (max-width: 768px) {
+  .header-center {
+    display: none;
+  }
 }
 
 @media screen and (max-width: 576px) {

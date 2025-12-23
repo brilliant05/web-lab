@@ -1,5 +1,20 @@
 <template>
   <div class="teacher-home">
+    <!-- 未回答问题提醒 -->
+    <div v-if="unansweredCount > 0" class="alert-container" @click="goToQuestions">
+      <el-alert
+        :title="`您所在课程有 ${unansweredCount} 条未回答问题`"
+        type="warning"
+        effect="dark"
+        show-icon
+        :closable="false"
+      >
+        <template #default>
+          <span class="alert-link">点击进入答疑界面</span>
+        </template>
+      </el-alert>
+    </div>
+
     <el-row :gutter="20">
       <el-col :span="6">
         <el-card shadow="hover" class="stat-card">
@@ -89,9 +104,34 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const unansweredCount = ref(12) // 模拟数据，后续可从API获取
+
+const goToQuestions = () => {
+  router.push('/teacher/questions')
+}
 </script>
 
 <style scoped>
+.alert-container {
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.alert-container:hover {
+  transform: translateY(-2px);
+}
+
+.alert-link {
+  margin-left: 10px;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
 .stat-card .card-content {
   display: flex;
   align-items: baseline;

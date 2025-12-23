@@ -7,5 +7,4 @@ export const adminApi = {
   // 教师管理
   getTeachers: (params = {}) => http.get('/admin/teachers', { params }),
   // 学生管理
-  getStudents: (params = {}) => http.get('/admin/students/page', { params }),
-  create
+  getStudents: (params = {}) => http.get('/admin/students/page', { params })}

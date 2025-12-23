@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Login from '../views/Login.vue'
 import AdminLayout from '../views/AdminLayout.vue'
+import Login from '../views/Login.vue'
 import Dashboard from '../views/admin/Dashboard.vue'
 import StudentLayout from '../views/student/StudentLayout.vue'
 
@@ -124,6 +124,44 @@ const routes = [
         path: 'profile',
         name: 'StudentProfile',
         component: () => import('../views/student/Profile.vue'),
+        meta: { title: '个人中心' }
+      }
+    ]
+  },
+  {
+    path: '/teacher',
+    component: () => import('../views/teacher/TeacherLayout.vue'),
+    redirect: '/teacher/home',
+    meta: { requiresAuth: true, role: 'TEACHER' },
+    children: [
+      {
+        path: 'home',
+        name: 'TeacherHome',
+        component: () => import('../views/teacher/Home.vue'),
+        meta: { title: '教师首页' }
+      },
+      {
+        path: 'courses',
+        name: 'TeacherCourses',
+        component: () => import('../views/teacher/Courses.vue'),
+        meta: { title: '我的课程' }
+      },
+      {
+        path: 'resources',
+        name: 'TeacherResources',
+        component: () => import('../views/teacher/Resources.vue'),
+        meta: { title: '资源管理' }
+      },
+      {
+        path: 'questions',
+        name: 'TeacherQuestions',
+        component: () => import('../views/teacher/Questions.vue'),
+        meta: { title: '答疑解惑' }
+      },
+      {
+        path: 'profile',
+        name: 'TeacherProfile',
+        component: () => import('../views/teacher/Profile.vue'),
         meta: { title: '个人中心' }
       }
     ]

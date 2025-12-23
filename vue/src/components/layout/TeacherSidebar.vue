@@ -1,8 +1,8 @@
 <template>
   <el-aside width="240px" class="teacher-aside">
     <div class="aside-header">
-      <el-avatar :size="80" :src="userInfo.avatar" />
-      <div class="user-name">{{ userInfo.name }}</div>
+      <el-avatar :size="80" :src="userInfo.avatarUrl" />
+      <div class="user-name">{{ userInfo.realName }}</div>
       <div class="user-role">{{ userInfo.role }}</div>
     </div>
 
@@ -51,16 +51,26 @@ import {
     Reading,
     User
 } from '@element-plus/icons-vue'
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 
 // 用户信息
-const userInfo = ref({
-  name: '教师用户',
-  role: '教师',
-  avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+const userInfo = ref(JSON.parse(localStorage.getItem('userInfo')) || {})
+userInfo.value.role = '教师'
+
+const updateUserInfo = () => {
+  const storedInfo = JSON.parse(localStorage.getItem('userInfo')) || {}
+  userInfo.value = { ...storedInfo, role: '教师' }
+}
+
+onMounted(() => {
+  window.addEventListener('userInfoUpdated', updateUserInfo)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('userInfoUpdated', updateUserInfo)
 })
 
 // 当前激活的菜单（根据当前路由）

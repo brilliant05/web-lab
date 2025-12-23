@@ -187,3 +187,5 @@ onMounted(load)
   border: none;
   border-radius: 12px;
   padding: 10px 12px;
+}
+</style>

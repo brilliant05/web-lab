@@ -27,11 +27,11 @@ onMounted(() => {
 
 <style scoped>
 .welcome-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4f7a 100%);
   border-radius: 16px;
   padding: 32px 40px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
 }
 
 .banner-content {

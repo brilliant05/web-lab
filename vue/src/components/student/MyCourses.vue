@@ -6,23 +6,11 @@
     </div>
 
     <div class="courses-grid" v-loading="loading">
-      <el-card
+      <CourseCard
         v-for="course in courses"
         :key="course.courseId"
-        class="course-card"
-        shadow="hover"
-        @click="goToCourseDetail(course.courseId)"
-      >
-        <div class="course-cover">
-          <div class="course-cover-placeholder">
-            <el-icon :size="48"><Reading /></el-icon>
-          </div>
-        </div>
-        <div class="course-info">
-          <div class="course-name">{{ course.courseName }}</div>
-          <div class="course-teacher">{{ course.teacherName || '暂无教师' }}</div>
-        </div>
-      </el-card>
+        :course="course"
+      />
 
       <el-empty
         v-if="!loading && courses.length === 0"
@@ -36,9 +24,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Reading } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getCourseList } from '@/api'
+import CourseCard from './CourseCard.vue'
 
 const router = useRouter()
 
@@ -87,8 +75,7 @@ const goToAllCourses = () => {
 
 // 跳转到课程详情
 const goToCourseDetail = (courseId) => {
-  // TODO: 实现课程详情页跳转
-  // 暂时跳转到资源列表，筛选该课程
+  // 跳转到资源列表，筛选该课程
   router.push({
     path: '/student/resources',
     query: { courseId }
@@ -127,55 +114,6 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
   min-height: 200px;
-}
-
-.course-card {
-  cursor: pointer;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.2s;
-}
-
-.course-card:hover {
-  transform: translateY(-4px);
-}
-
-.course-cover {
-  width: 100%;
-  height: 160px;
-  overflow: hidden;
-}
-
-.course-cover-placeholder {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.course-info {
-  padding: 16px;
-}
-
-.course-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-  margin-bottom: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.course-teacher {
-  font-size: 14px;
-  color: #909399;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @media screen and (min-width: 1200px) {

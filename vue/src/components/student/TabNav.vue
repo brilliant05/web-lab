@@ -52,6 +52,7 @@ const handleNavClick = (path) => {
   background-color: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   gap: 8px;
+  border-bottom: 1px solid #e4e7ed;
 }
 
 .tab-item {
@@ -71,13 +72,14 @@ const handleNavClick = (path) => {
   transition: color 0.2s;
 }
 
-.tab-item:hover .tab-text {
-  color: #409eff;
-}
 
 .tab-item.active .tab-text {
-  color: #409eff;
+  color: #1e3a5f;
   font-weight: 600;
+}
+
+.tab-item:hover .tab-text {
+  color: #1e3a5f;
 }
 
 .tab-indicator {
@@ -87,7 +89,7 @@ const handleNavClick = (path) => {
   transform: translateX(-50%);
   width: 32px;
   height: 3px;
-  background-color: #409eff;
+  background-color: #1e3a5f;
   border-radius: 2px 2px 0 0;
 }
 

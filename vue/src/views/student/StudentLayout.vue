@@ -25,7 +25,7 @@ import TabNav from '@/components/student/TabNav.vue'
 <style scoped>
 .student-layout {
   min-height: 100vh;
-  background-color: #f5f7fb;
+  background-color: #f0f2f5;
   display: flex;
   flex-direction: column;
 }

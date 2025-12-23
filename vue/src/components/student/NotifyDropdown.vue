@@ -2,7 +2,7 @@
   <el-dropdown trigger="click" @command="handleCommand" @visible-change="handleVisibleChange">
     <div class="notification-trigger">
       <el-badge :value="unreadCount" :hidden="unreadCount === 0" class="notification-badge">
-        <el-icon :size="20" style="cursor: pointer">
+        <el-icon :size="20" style="cursor: pointer; color: #fff">
           <Bell />
         </el-icon>
       </el-badge>
@@ -183,10 +183,21 @@ defineExpose({
   padding: 5px;
   display: flex;
   align-items: center;
+  color: #fff;
+  transition: opacity 0.2s;
+}
+
+.notification-trigger:hover {
+  opacity: 0.8;
 }
 
 .notification-badge {
   cursor: pointer;
+}
+
+.notification-badge :deep(.el-badge__content) {
+  background-color: #f56c6c;
+  border-color: #fff;
 }
 
 .notification-dropdown {

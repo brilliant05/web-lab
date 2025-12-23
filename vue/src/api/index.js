@@ -60,6 +60,14 @@ export const updateCourse = (courseId, data) =>
 export const deleteCourse = (courseId) =>
   http.delete(`/courses/${courseId}`)
 
+// 文件上传接口
+export const uploadCourseCover = (formData) =>
+  http.post('/files/course-cover', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+
 // 资源管理接口
 export const getResourceList = (params = {}) =>
   http.get('/resources', { params })

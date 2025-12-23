@@ -7,77 +7,115 @@
         prefix-icon="Search"
         style="width: 300px"
         clearable
+        @clear="handleSearch"
+        @keyup.enter="handleSearch"
       />
-      <el-button type="primary" icon="Plus" @click="handleAddCourse">申请新课程</el-button>
+      <el-button type="primary" @click="handleSearch">搜索</el-button>
     </div>
 
-    <el-row :gutter="20" class="course-list">
-      <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="course in filteredCourses" :key="course.id">
-        <el-card class="course-card" shadow="hover" :body-style="{ padding: '0px' }">
-          <div class="course-cover" :style="{ backgroundColor: getRandomColor(course.id) }">
-            <div class="course-title-overlay">
-              <h3>{{ course.name }}</h3>
+    <div 
+      class="course-list-container"
+      v-infinite-scroll="loadMore"
+      :infinite-scroll-disabled="disabled"
+      :infinite-scroll-distance="10"
+    >
+      <el-row :gutter="20" class="course-list">
+        <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="course in courses" :key="course.courseId">
+          <el-card class="course-card" shadow="hover" :body-style="{ padding: '0px' }">
+            <div class="course-cover">
+              <CourseCover 
+                :src="course.coverImage" 
+                :title="course.courseName" 
+                :id="course.courseId" 
+              />
             </div>
-          </div>
-          <div class="course-info">
-            <div class="course-meta">
-              <el-tag size="small" :type="course.status === 'active' ? 'success' : 'info'">
-                {{ course.status === 'active' ? '进行中' : '已结课' }}
-              </el-tag>
-              <span class="student-count">
-                <el-icon><User /></el-icon> {{ course.studentCount }} 人
-              </span>
+            <div class="course-info">
+              <div class="course-meta">
+                <el-tag size="small" type="success">
+                  {{ course.college }}
+                </el-tag>
+                <span class="student-count">
+                  <el-icon><User /></el-icon> {{ course.studentCount || 0 }} 人
+                </span>
+              </div>
+              <p class="course-desc" :title="course.description">{{ course.description || '暂无简介' }}</p>
+              <div class="course-actions">
+                <el-button type="primary" plain  style="width: 100%" @click="handleManage(course)">进入课程</el-button>
+              </div>
             </div>
-            <p class="course-desc">{{ course.description }}</p>
-            <div class="course-actions">
-              <el-button type="primary" plain size="small" @click="handleManage(course)">管理课程</el-button>
-              <el-button type="info" plain size="small" @click="handleStudents(course)">学生名单</el-button>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+          </el-card>
+        </el-col>
+      </el-row>
+      
+      <div v-if="loading" class="loading-text">加载中...</div>
+      <div v-if="noMore && courses.length > 0" class="no-more-text">没有更多了</div>
+    </div>
 
-    <el-empty v-if="filteredCourses.length === 0" description="暂无课程数据" />
+    <el-empty v-if="!loading && courses.length === 0" description="暂无课程数据" />
   </div>
 </template>
 
 <script setup>
+import { getMyCourses } from '@/api'
+import CourseCover from '@/components/CourseCover.vue'
 import { User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const searchKeyword = ref('')
+const loading = ref(false)
+const courses = ref([])
+const currentPage = ref(1)
+const pageSize = ref(12)
+const total = ref(0)
 
-const courses = ref([
-  { id: 1, name: 'Java Web 开发基础', description: '本课程主要讲解Java Web开发的核心技术，包括Servlet、JSP、MVC模式等。', studentCount: 45, status: 'active' },
-  { id: 2, name: 'Vue.js 前端框架实战', description: '深入浅出讲解Vue 3的核心概念与实战技巧，构建现代化前端应用。', studentCount: 62, status: 'active' },
-  { id: 3, name: '数据库系统原理', description: '介绍关系型数据库的基本原理、SQL语言以及数据库设计范式。', studentCount: 38, status: 'finished' },
-  { id: 4, name: '软件工程导论', description: '软件开发生命周期、敏捷开发方法论及项目管理基础。', studentCount: 50, status: 'active' },
-  { id: 5, name: '计算机网络', description: '计算机网络体系结构、TCP/IP协议栈详解。', studentCount: 42, status: 'active' },
-])
+const noMore = computed(() => courses.value.length >= total.value)
+const disabled = computed(() => loading.value || noMore.value)
 
-const filteredCourses = computed(() => {
-  if (!searchKeyword.value) return courses.value
-  return courses.value.filter(c => c.name.toLowerCase().includes(searchKeyword.value.toLowerCase()))
-})
-
-const getRandomColor = (id) => {
-  const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#303133']
-  return colors[id % colors.length]
+const loadMore = () => {
+  currentPage.value++
+  fetchCourses(true)
 }
 
-const handleAddCourse = () => {
-  ElMessage.info('申请新课程功能开发中...')
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchCourses(false)
+}
+
+const fetchCourses = async (append = false) => {
+  loading.value = true
+  try {
+    const params = {
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      courseName: searchKeyword.value
+    }
+    const res = await getMyCourses(params)
+    if (res.code === 200) {
+      if (append) {
+        courses.value.push(...res.data.records)
+      } else {
+        courses.value = res.data.records
+      }
+      total.value = res.data.total
+    }
+  } catch (error) {
+    console.error('获取课程列表失败:', error)
+    ElMessage.error('获取课程列表失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleManage = (course) => {
-  ElMessage.success(`管理课程：${course.name}`)
+  router.push({ name: 'TeacherCourseDetail', params: { id: course.courseId } })
 }
 
-const handleStudents = (course) => {
-  ElMessage.info(`查看 ${course.name} 的学生名单`)
-}
+onMounted(() => {
+  fetchCourses()
+})
 </script>
 
 <style scoped>
@@ -88,12 +126,13 @@ const handleStudents = (course) => {
 .operation-bar {
   margin-bottom: 20px;
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
 }
 
 .course-list {
   margin-bottom: 20px;
+  min-height: 400px;
 }
 
 .course-card {
@@ -102,6 +141,9 @@ const handleStudents = (course) => {
   border-radius: 12px;
   overflow: hidden;
   border: none;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .course-card:hover {
@@ -110,27 +152,15 @@ const handleStudents = (course) => {
 }
 
 .course-cover {
-  height: 120px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.course-title-overlay {
-  padding: 0 20px;
-  text-align: center;
-}
-
-.course-title-overlay h3 {
-  margin: 0;
-  font-size: 18px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  height: 140px;
+  overflow: hidden;
 }
 
 .course-info {
   padding: 15px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .course-meta {
@@ -164,9 +194,18 @@ const handleStudents = (course) => {
 .course-actions {
   display: flex;
   gap: 10px;
+  margin-top: auto;
 }
 
 .course-actions .el-button {
   flex: 1;
+}
+
+.loading-text,
+.no-more-text {
+  text-align: center;
+  padding: 20px;
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
 }
 </style>

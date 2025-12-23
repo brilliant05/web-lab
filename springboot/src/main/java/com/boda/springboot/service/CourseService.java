@@ -3,6 +3,9 @@ package com.boda.springboot.service;
 import com.boda.springboot.common.PageResult;
 import com.boda.springboot.dto.CoursePageQueryDTO;
 import com.boda.springboot.entity.Course;
+import com.boda.springboot.entity.User;
+
+import java.util.List;
 
 /**
  * 课程服务接口
@@ -68,4 +71,25 @@ public interface CourseService {
      * @param inviteCode 邀请码
      */
     void joinCourse(Long studentId, String inviteCode);
+
+    /**
+     * 获取课程的学生列表
+     * @param courseId 课程ID
+     * @return 学生列表
+     */
+    List<User> getCourseStudents(Long courseId);
+
+    /**
+     * 获取课程的教师列表
+     * @param courseId 课程ID
+     * @return 教师列表
+     */
+    List<User> getCourseTeachers(Long courseId);
+
+    /**
+     * 获取教师的课程列表
+     * @param teacherId 教师ID
+     * @return 课程列表
+     */
+    List<Course> getTeacherCourses(Long teacherId);
 }

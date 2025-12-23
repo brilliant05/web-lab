@@ -72,6 +72,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item :icon="View" @click="handleView(row)">查看详情</el-dropdown-item>
+                <el-dropdown-item :icon="List" @click="handleViewCourses(row)">查看课程</el-dropdown-item>
                 <el-dropdown-item :icon="Delete" style="color: var(--el-color-danger)" divided @click="handleDeleteSingle(row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -210,6 +211,25 @@
         <el-descriptions-item label="创建时间">{{ viewData.createTime }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
+    <!-- 查看课程对话框 -->
+    <el-dialog
+      v-model="viewCoursesDialogVisible"
+      title="已分配课程"
+      width="700px"
+    >
+      <el-table :data="assignedCourses" style="width: 100%" border>
+        <el-table-column prop="courseCode" label="课程编号" width="120" />
+        <el-table-column prop="courseName" label="课程名称" min-width="150" />
+        <el-table-column prop="college" label="开课学院" width="150" />
+        <el-table-column prop="status" label="状态" width="80">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
+              {{ row.status === 1 ? '开放' : '关闭' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -217,6 +237,7 @@
 import {
     ArrowDown, Delete, Edit,
     Iphone,
+    List,
     Medal,
     Message,
     Plus, Refresh,
@@ -228,7 +249,7 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, onMounted, reactive, ref } from 'vue'
 
-import { addTeacher, deleteTeacher, getTeacherList, updateTeacher, updateTeacherStatus } from '@/api'
+import { addTeacher, deleteTeacher, getTeacherCourses, getTeacherList, updateTeacher, updateTeacherStatus } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 
 const collegeList = COLLEGE_LIST
@@ -247,6 +268,10 @@ const submitLoading = ref(false)
 // 查看详情相关
 const viewDialogVisible = ref(false)
 const viewData = ref({})
+
+// 查看课程相关
+const viewCoursesDialogVisible = ref(false)
+const assignedCourses = ref([])
 
 const formData = reactive({
   userId: '',
@@ -339,6 +364,22 @@ const handleBatchDelete = () => {
 const handleView = (row) => {
   viewData.value = row
   viewDialogVisible.value = true
+}
+
+const handleViewCourses = async (row) => {
+  viewCoursesDialogVisible.value = true
+  assignedCourses.value = [] // 清空旧数据
+  try {
+    // 优先使用 id
+    const id = row.id || row.userId
+    const res = await getTeacherCourses(id)
+    if (res.code === 200) {
+      assignedCourses.value = res.data
+    }
+  } catch (error) {
+    console.error('获取教师课程失败', error)
+    ElMessage.error('获取课程列表失败')
+  }
 }
 
 const handleEdit = (row) => {

@@ -13,8 +13,12 @@
         <div class="breadcrumb-container">
           <el-breadcrumb separator="/">
             <el-breadcrumb-item :to="{ path: '/teacher/home' }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item v-for="(item, index) in breadcrumbs" :key="index">
-              {{ item.meta.title }}
+            <el-breadcrumb-item 
+              v-for="(item, index) in breadcrumbs" 
+              :key="index"
+              :to="index < breadcrumbs.length - 1 ? { path: item.path } : null"
+            >
+              {{ item.title }}
             </el-breadcrumb-item>
           </el-breadcrumb>
         </div>
@@ -40,14 +44,29 @@ const route = useRoute();
 
 // 计算面包屑
 const breadcrumbs = computed(() => {
-  return route.matched.filter(item => item.meta && item.meta.title && item.path !== '/teacher/home');
+  const items = route.matched
+    .filter(item => item.meta && item.meta.title && item.path !== '/teacher/home')
+    .map(item => ({
+      title: item.meta.title,
+      path: item.path
+    }));
+
+  // 特殊处理：课程详情页添加"我的课程"面包屑
+  if (route.name === 'TeacherCourseDetail') {
+    items.splice(items.length - 1, 0, {
+      title: '我的课程',
+      path: '/teacher/courses'
+    });
+  }
+
+  return items;
 });
 </script>
 
 <style scoped>
 .teacher-container {
   height: 100vh;
-  background-color: #f0f2f5;
+  background-color: var(--el-bg-color-page);
 }
 
 .main-container {
@@ -62,10 +81,10 @@ const breadcrumbs = computed(() => {
 
 .breadcrumb-container {
   margin-bottom: 20px;
-  background: #fff;
+  background: var(--el-bg-color);
   padding: 15px 20px;
   border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  box-shadow: var(--el-box-shadow-light);
 }
 
 /* 路由切换动画 */

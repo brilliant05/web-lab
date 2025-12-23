@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 public class AdminTeacherController {
     @Autowired
     AdminTeacherService adminTeacherService;
+    @Autowired
+    com.boda.springboot.service.CourseService courseService;
 
     /**
      * 添加教师
@@ -91,5 +93,17 @@ public class AdminTeacherController {
         log.info("分页查询教师: {}", teacherPageQueryDTO);
         PageResult pageResult = adminTeacherService.pageQuery(teacherPageQueryDTO);
         return Result.success(pageResult);
+    }
+
+    /**
+     * 获取教师的课程列表
+     * @param teacherId 教师ID
+     * @return 课程列表
+     */
+    @GetMapping("/{teacherId}/courses")
+    @RequireRole("ADMIN")
+    public Result<java.util.List<com.boda.springboot.entity.Course>> getTeacherCourses(@PathVariable Long teacherId) {
+        log.info("查询教师课程列表 - 教师ID: {}", teacherId);
+        return Result.success(courseService.getTeacherCourses(teacherId));
     }
 }

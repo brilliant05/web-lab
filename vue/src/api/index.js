@@ -123,6 +123,12 @@ export const updateAnswer = (answerId, data) =>
 export const deleteAnswer = (answerId) =>
   http.delete(`/answers/${answerId}`)
 
+export const getPendingQuestions = (params = {}) =>
+  http.get('/questions/pending', { params })
+
+export const answerQuestion = (questionId, formData) =>
+  http.post(`/questions/${questionId}/answers`, formData)
+
 // 通知管理接口
 export const getNotificationList = (params = {}) =>
   http.get('/notifications', { params })
@@ -130,10 +136,10 @@ export const getNotificationList = (params = {}) =>
 export const getUnreadCount = () =>
   http.get('/notifications/unread-count')
 
-export const markNotificationAsRead = (notificationId) =>
+export const markNotificationRead = (notificationId) =>
   http.put(`/notifications/${notificationId}/read`)
 
-export const markAllNotificationsAsRead = () =>
+export const markAllNotificationRead = () =>
   http.put('/notifications/read-all')
 
 export const deleteNotification = (notificationId) =>
@@ -156,4 +162,22 @@ export const uploadAvatar = (formData) =>
 export default {
   authApi
 }
+
+export const getMyCourses = (params = {}) =>
+  http.get('/courses/my', { params })
+
+export const getCourseStudents = (courseId) =>
+  http.get(`/courses/${courseId}/students`)
+
+export const assignTeacher = (courseId, teacherId) =>
+  http.post(`/courses/${courseId}/teachers`, { teacherId })
+
+export const removeTeacher = (courseId, teacherId) =>
+  http.delete(`/courses/${courseId}/teachers/${teacherId}`)
+
+export const getCourseTeachers = (courseId) =>
+  http.get(`/courses/${courseId}/teachers`)
+
+export const getTeacherCourses = (teacherId) =>
+  http.get(`/admin/teachers/${teacherId}/courses`)
 

@@ -6,12 +6,14 @@ import com.boda.springboot.common.PageResult;
 import com.boda.springboot.common.Result;
 import com.boda.springboot.dto.CoursePageQueryDTO;
 import com.boda.springboot.entity.Course;
+import com.boda.springboot.entity.User;
 import com.boda.springboot.service.CourseService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -190,4 +192,27 @@ public class CourseController {
         return Result.success("加入课程成功!");
     }
 
+    /**
+     * 获取课程的学生列表（教师）
+     * GET /courses/1/students
+     */
+    @GetMapping("/{courseId}/students")
+    @RequireRole(Constant.ROLE_TEACHER)
+    public Result<List<User>> getCourseStudents(@PathVariable Long courseId) {
+        log.info("接收到查询课程学生列表请求 - 课程ID: {}", courseId);
+        List<User> students = courseService.getCourseStudents(courseId);
+        return Result.success(students);
+    }
+
+    /**
+     * 获取课程的教师列表（管理员）
+     * GET /courses/1/teachers
+     */
+    @GetMapping("/{courseId}/teachers")
+    @RequireRole(Constant.ROLE_ADMIN)
+    public Result<List<User>> getCourseTeachers(@PathVariable Long courseId) {
+        log.info("接收到查询课程教师列表请求 - 课程ID: {}", courseId);
+        List<User> teachers = courseService.getCourseTeachers(courseId);
+        return Result.success(teachers);
+    }
 }

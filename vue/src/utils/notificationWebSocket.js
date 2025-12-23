@@ -22,8 +22,8 @@ class NotificationWebSocket {
 
     this.userId = userId
 
-    // WebSocket 服务器地址
-    const wsUrl = `ws://localhost:8080/ws/notification/${userId}`
+    // WebSocket 服务器地址 (注意添加 context-path /api/v1)
+    const wsUrl = `ws://localhost:8080/api/v1/ws/notification/${userId}`
 
     try {
       this.ws = new WebSocket(wsUrl)

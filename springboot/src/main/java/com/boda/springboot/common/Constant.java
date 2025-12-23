@@ -15,5 +15,9 @@ public class Constant {
     public final static Integer DELETE_NO = 0;
     public final static Integer COURSE_OPEN = 1;
     public final static Integer COURSE_CLOSE = 0;
+    public final static String NOTIFICATION_TYPE_ANSWER_REPLY = "ANSWER_REPLY";
+    public final static String NOTIFICATION_TYPE_RESOURCE_AUDIT = "RESOURCE_AUDIT";
+    public final static String NOTIFICATION_TYPE_SYSTEM = "SYSTEM";
+    public final static String NOTIFICATION_TYPE_NEW_QUESTION = "NEW_QUESTION";
 
 }

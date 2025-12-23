@@ -38,5 +38,12 @@
         WHERE course_id = #{courseId}
     </select>
 
+    <!-- 根据课程ID查询所有关联的教师ID -->
+    <select id="selectTeacherIdsByCourseId" resultType="java.lang.Long">
+        SELECT teacher_id
+        FROM teacher_course
+        WHERE course_id = #{courseId}
+    </select>
+
 </mapper>
 

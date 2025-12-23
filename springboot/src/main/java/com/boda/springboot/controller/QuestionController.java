@@ -36,8 +36,17 @@ public class QuestionController {
      * 可选查询参数见 QuestionPageQueryDTO
      */
     @GetMapping
-    public Result<PageResult> getQuestionList(QuestionPageQueryDTO queryDTO) {
+    public Result<PageResult> getQuestionList(QuestionPageQueryDTO queryDTO, HttpServletRequest request) {
         log.info("接收到问题列表查询请求 - 查询条件: {}", queryDTO);
+
+        // 获取当前用户信息
+        Long currentUserId = (Long) request.getAttribute("userId");
+        String role = (String) request.getAttribute("role");
+
+        // 如果是教师，只能查看提问给自己的问题
+        if (Constant.ROLE_TEACHER.equals(role)) {
+            queryDTO.setTeacherId(currentUserId);
+        }
 
         PageResult pageResult = questionService.pageQuery(queryDTO);
         return Result.success(pageResult);

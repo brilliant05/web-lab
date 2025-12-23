@@ -5,6 +5,7 @@ import com.boda.springboot.dto.CoursePageQueryDTO;
 import com.boda.springboot.entity.Course;
 import com.boda.springboot.entity.StudentCourse;
 import com.boda.springboot.entity.TeacherCourse;
+import com.boda.springboot.entity.User;
 import com.boda.springboot.exception.ServiceException;
 import com.boda.springboot.mapper.CourseMapper;
 import com.boda.springboot.mapper.StudentCourseMapper;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * 课程服务实现类
@@ -242,5 +245,35 @@ public class CourseServiceImpl implements CourseService {
         studentCourseMapper.save(studentCourse);
 
         log.info("学生加入课程成功 - 课程: {}", course.getCourseName());
+    }
+
+    /**
+     * 获取课程的学生列表
+     * @param courseId 课程ID
+     * @return 学生列表
+     */
+    @Override
+    public List<User> getCourseStudents(Long courseId) {
+        return courseMapper.selectStudentsByCourseId(courseId);
+    }
+
+    /**
+     * 获取课程的教师列表
+     * @param courseId 课程ID
+     * @return 教师列表
+     */
+    @Override
+    public List<User> getCourseTeachers(Long courseId) {
+        return courseMapper.selectTeachersByCourseId(courseId);
+    }
+
+    /**
+     * 获取教师的课程列表
+     * @param teacherId 教师ID
+     * @return 课程列表
+     */
+    @Override
+    public List<Course> getTeacherCourses(Long teacherId) {
+        return courseMapper.selectByTeacherId(teacherId);
     }
 }

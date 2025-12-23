@@ -59,6 +59,8 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item :icon="View" @click="handleView(row)">查看详情</el-dropdown-item>
+                <el-dropdown-item :icon="List" @click="handleViewTeachers(row)">查看教师</el-dropdown-item>
+                <el-dropdown-item :icon="User" @click="handleAssignTeacher(row)">分配教师</el-dropdown-item>
                 <el-dropdown-item :icon="Delete" style="color: var(--el-color-danger)" divided @click="handleDeleteSingle(row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -202,15 +204,114 @@
         <el-descriptions-item label="更新时间">{{ formatDateTime(viewData.updateTime) }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
+
+    <!-- 查看教师对话框 -->
+    <el-dialog
+      v-model="viewTeachersDialogVisible"
+      title="已分配教师"
+      width="600px"
+    >
+      <el-table :data="assignedTeachers" style="width: 100%" border>
+        <el-table-column prop="username" label="工号" width="120" />
+        <el-table-column prop="realName" label="姓名" width="120" />
+        <el-table-column prop="college" label="学院" />
+        <el-table-column label="操作" width="100">
+          <template #default="{ row }">
+            <el-button 
+              type="danger" 
+              link 
+              size="small" 
+              @click="handleRemoveTeacher(row)"
+            >
+              移除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+
+    <!-- 分配教师对话框 -->
+    <el-dialog
+      v-model="assignTeacherDialogVisible"
+      title="分配教师"
+      width="800px"
+    >
+      <div class="teacher-filter" style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <el-input
+          v-model="teacherSearchForm.realName"
+          placeholder="教师姓名"
+          style="width: 200px"
+          clearable
+          @clear="loadTeacherList"
+          @keyup.enter="loadTeacherList"
+        />
+        <el-select
+          v-model="teacherSearchForm.college"
+          placeholder="选择学院"
+          style="width: 200px"
+          clearable
+          @change="loadTeacherList"
+        >
+          <el-option
+            v-for="college in collegeList"
+            :key="college"
+            :label="college"
+            :value="college"
+          />
+        </el-select>
+        <el-button type="primary" @click="loadTeacherList">搜索</el-button>
+      </div>
+
+      <el-table
+        v-loading="teacherLoading"
+        :data="teacherList"
+        style="width: 100%"
+        height="400px"
+        @selection-change="handleTeacherSelectionChange"
+      >
+        <el-table-column type="selection" width="55" :selectable="(row) => !assignedTeacherIds.includes(row.userId)" />
+        <el-table-column prop="realName" label="姓名" width="120" />
+        <el-table-column prop="username" label="工号" width="120" />
+        <el-table-column prop="college" label="学院" width="150" />
+        <el-table-column prop="jobTitle" label="职称" width="100" />
+        <el-table-column prop="status" label="状态" width="80">
+          <template #default="{ row }">
+            <el-tag v-if="assignedTeacherIds.includes(row.userId)" type="warning" size="small">已分配</el-tag>
+            <el-tag v-else :type="row.status === 1 ? 'success' : 'info'" size="small">
+              {{ row.status === 1 ? '正常' : '禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+        <el-pagination
+          v-model:current-page="teacherPagination.currentPage"
+          v-model:page-size="teacherPagination.pageSize"
+          :total="teacherPagination.total"
+          layout="total, prev, pager, next"
+          @current-change="handleTeacherPageChange"
+        />
+      </div>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="assignTeacherDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitAssignTeacher" :loading="assignLoading">
+            确定分配 ({{ selectedTeacherIds.length }})
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </el-card>
 </template>
 
 <script setup>
-import { ArrowDown, Delete, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
+import { addCourse, assignTeacher, deleteCourse, getCourseList, getCourseTeachers, getTeacherList, removeTeacher, updateCourse, uploadCourseCover } from '@/api'
+import { COLLEGE_LIST } from '@/utils/constants'
+import { ArrowDown, Delete, Edit, List, Plus, Refresh, Search, User, View } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
-import { addCourse, deleteCourse, getCourseList, updateCourse, uploadCourseCover } from '@/api'
-import { COLLEGE_LIST } from '@/utils/constants'
 
 const collegeList = COLLEGE_LIST
 
@@ -244,6 +345,30 @@ const uploadCoverLoading = ref(false)
 // 查看详情相关
 const viewDialogVisible = ref(false)
 const viewData = ref({})
+
+// 查看教师相关
+const viewTeachersDialogVisible = ref(false)
+const assignedTeachers = ref([])
+const assignedTeacherIds = ref([]) // 用于在分配时禁用已选教师
+
+// 分配教师相关
+const assignTeacherDialogVisible = ref(false)
+const assignLoading = ref(false)
+const teacherLoading = ref(false)
+const teacherList = ref([])
+const selectedTeacherIds = ref([])
+const currentCourseId = ref(null)
+
+const teacherSearchForm = reactive({
+  realName: '',
+  college: ''
+})
+
+const teacherPagination = reactive({
+  currentPage: 1,
+  pageSize: 5,
+  total: 0
+})
 
 // 表单数据
 const formData = reactive({
@@ -581,6 +706,117 @@ const loadTableData = async () => {
 onMounted(() => {
   loadTableData()
 })
+
+// 查看教师
+const handleViewTeachers = async (row) => {
+  currentCourseId.value = row.courseId
+  viewTeachersDialogVisible.value = true
+  await loadAssignedTeachers()
+}
+
+// 加载已分配教师
+const loadAssignedTeachers = async () => {
+  try {
+    const res = await getCourseTeachers(currentCourseId.value)
+    if (res.code === 200) {
+      assignedTeachers.value = res.data
+      assignedTeacherIds.value = res.data.map(t => t.userId)
+    }
+  } catch (error) {
+    console.error('获取已分配教师失败:', error)
+    ElMessage.error('获取已分配教师失败')
+  }
+}
+
+// 移除教师
+const handleRemoveTeacher = async (teacher) => {
+  try {
+    await ElMessageBox.confirm(`确定要移除教师"${teacher.realName}"吗？`, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    await removeTeacher(currentCourseId.value, teacher.userId)
+    ElMessage.success('移除成功')
+    loadAssignedTeachers() // 重新加载列表
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('移除失败:', error)
+      ElMessage.error('移除失败')
+    }
+  }
+}
+
+const handleAssignTeacher = async (row) => {
+  currentCourseId.value = row.courseId
+  assignTeacherDialogVisible.value = true
+  // 重置搜索条件
+  teacherSearchForm.realName = ''
+  teacherSearchForm.college = ''
+  teacherPagination.currentPage = 1
+  selectedTeacherIds.value = []
+  
+  // 先加载已分配的教师ID，用于禁用
+  await loadAssignedTeachers()
+  
+  loadTeacherList()
+}
+
+const loadTeacherList = async () => {
+  teacherLoading.value = true
+  try {
+    const params = {
+      pageNum: teacherPagination.currentPage,
+      pageSize: teacherPagination.pageSize,
+      realName: teacherSearchForm.realName,
+      college: teacherSearchForm.college
+    }
+    const res = await getTeacherList(params)
+    if (res.code === 200) {
+      teacherList.value = res.data.records
+      teacherPagination.total = Number(res.data.total)
+    }
+  } catch (error) {
+    console.error('搜索教师失败:', error)
+  } finally {
+    teacherLoading.value = false
+  }
+}
+
+const handleTeacherSelectionChange = (selection) => {
+  selectedTeacherIds.value = selection.map(item => item.userId)
+}
+
+const handleTeacherPageChange = (page) => {
+  teacherPagination.currentPage = page
+  loadTeacherList()
+}
+
+const submitAssignTeacher = async () => {
+  if (selectedTeacherIds.value.length === 0) {
+    ElMessage.warning('请至少选择一名教师')
+    return
+  }
+  
+  assignLoading.value = true
+  try {
+    // 循环调用分配接口
+    const promises = selectedTeacherIds.value.map(teacherId => 
+      assignTeacher(currentCourseId.value, teacherId)
+    )
+    
+    await Promise.all(promises)
+    
+    ElMessage.success(`成功分配 ${selectedTeacherIds.value.length} 名教师`)
+    assignTeacherDialogVisible.value = false
+  } catch (error) {
+    console.error('分配教师失败:', error)
+    ElMessage.error('部分或全部教师分配失败，请重试')
+  } finally {
+    assignLoading.value = false
+  }
+}
 </script>
 
 <style scoped>

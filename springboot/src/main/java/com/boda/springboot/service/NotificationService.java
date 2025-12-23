@@ -41,5 +41,15 @@ public interface NotificationService {
      * 创建系统通知
      */
     void createSystemNotification(Long userId, String title, String content);
+
+    /**
+     * 创建新问题通知（通知教师）
+     * @param teacherId 教师ID
+     * @param studentId 学生ID
+     * @param questionId 问题ID
+     * @param questionTitle 问题标题
+     * @param courseName 课程名称
+     */
+    void createQuestionNotification(Long teacherId, Long studentId, Long questionId, String questionTitle, String courseName);
 }
 

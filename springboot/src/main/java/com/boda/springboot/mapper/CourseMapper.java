@@ -2,6 +2,7 @@ package com.boda.springboot.mapper;
 
 import com.boda.springboot.dto.CoursePageQueryDTO;
 import com.boda.springboot.entity.Course;
+import com.boda.springboot.entity.User;
 import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -53,7 +54,7 @@ public interface CourseMapper {
      * @param inviteCode 邀请码
      * @return 课程信息
      */
-    @Select("SELECT * FROM course WHERE invite_code = #{inviteCode} AND is_deleted = 0")
+    @Select("SELECT * FROM  teacher_course WHERE invite_code = #{inviteCode} ")
     Course selectByInviteCode(String inviteCode);
 
     /**
@@ -75,4 +76,18 @@ public interface CourseMapper {
      */
     @Select("SELECT COUNT(*) FROM course WHERE is_deleted = 0")
     Integer countCourses();
+
+    /**
+     * 查询课程的学生列表
+     * @param courseId 课程ID
+     * @return 学生列表
+     */
+    List<User> selectStudentsByCourseId(Long courseId);
+
+    /**
+     * 查询课程的教师列表
+     * @param courseId 课程ID
+     * @return 教师列表
+     */
+    List<User> selectTeachersByCourseId(Long courseId);
 }

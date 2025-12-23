@@ -48,16 +48,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import {
+    getNotificationList,
+    getUnreadCount,
+    markAllNotificationRead,
+    markNotificationRead
+} from '@/api'
 import { Bell } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import {
-  getNotificationList,
-  getUnreadCount,
-  markNotificationAsRead,
-  markAllNotificationsAsRead
-} from '@/api'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
@@ -98,7 +98,7 @@ const loadNotifications = async () => {
 const handleItemClick = async (notification) => {
   if (notification.isRead === 0 || notification.isRead === false) {
     try {
-      await markNotificationAsRead(notification.notificationId)
+      await markNotificationRead(notification.notificationId)
       notification.isRead = 1
       unreadCount.value = Math.max(0, unreadCount.value - 1)
       ElMessage.success('已标记为已读')
@@ -111,7 +111,7 @@ const handleItemClick = async (notification) => {
 // 全部已读
 const handleMarkAllRead = async () => {
   try {
-    await markAllNotificationsAsRead()
+    await markAllNotificationRead()
     notifications.value.forEach(item => {
       item.isRead = 1
     })

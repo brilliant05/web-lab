@@ -4,6 +4,8 @@ import com.boda.springboot.entity.TeacherCourse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 教师课程关联 Mapper
  */
@@ -34,5 +36,10 @@ public interface TeacherCourseMapper {
      * 统计课程关联的教师数量
      */
     Integer countByCourseId(Long courseId);
+
+    /**
+     * 根据课程ID查询所有关联的教师ID
+     */
+    List<Long> selectTeacherIdsByCourseId(Long courseId);
 }
 

@@ -32,4 +32,9 @@ public class TeacherPageQueryDTO {
      * 真实姓名（模糊查询）
      */
     private String realName;
+
+    /**
+     * 学院
+     */
+    private String college;
 }

@@ -12,7 +12,9 @@ import com.boda.springboot.entity.Question;
 import com.boda.springboot.exception.ServiceException;
 import com.boda.springboot.mapper.AnswerLikeMapper;
 import com.boda.springboot.mapper.AnswerMapper;
+import com.boda.springboot.mapper.CourseMapper;
 import com.boda.springboot.mapper.QuestionMapper;
+import com.boda.springboot.mapper.TeacherCourseMapper;
 import com.boda.springboot.service.NotificationService;
 import com.boda.springboot.service.QuestionService;
 import com.boda.springboot.utils.QiNiuUtil;
@@ -53,6 +55,12 @@ public class QuestionServiceImpl implements QuestionService {
     @Autowired(required = false)
     private NotificationService notificationService;
 
+    @Autowired
+    private com.boda.springboot.mapper.CourseMapper courseMapper;
+
+    @Autowired
+    private com.boda.springboot.mapper.TeacherCourseMapper teacherCourseMapper;
+
     @Override
     @Transactional
     public void submitQuestion(QuestionSubmitDTO submitDTO, MultipartFile[] images, Long studentId) {
@@ -83,6 +91,39 @@ public class QuestionServiceImpl implements QuestionService {
 
         questionMapper.save(question);
         log.info("问题提交成功 - 问题ID: {}", question.getQuestionId());
+
+        // 发送通知给课程关联的教师
+        try {
+            if (notificationService != null) {
+                com.boda.springboot.entity.Course course = courseMapper.selectById(submitDTO.getCourseId());
+                if (course != null) {
+                    // 如果指定了提问教师，只通知该教师
+                    if (submitDTO.getTeacherId() != null) {
+                        notificationService.createQuestionNotification(
+                                submitDTO.getTeacherId(),
+                                studentId,
+                                question.getQuestionId(),
+                                question.getQuestionTitle(),
+                                course.getCourseName()
+                        );
+                    } else {
+                        // 否则通知课程下的所有教师
+                        List<Long> teacherIds = teacherCourseMapper.selectTeacherIdsByCourseId(submitDTO.getCourseId());
+                        for (Long teacherId : teacherIds) {
+                            notificationService.createQuestionNotification(
+                                    teacherId,
+                                    studentId,
+                                    question.getQuestionId(),
+                                    question.getQuestionTitle(),
+                                    course.getCourseName()
+                            );
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("发送新问题通知失败", e);
+        }
     }
 
     @Override

@@ -86,7 +86,7 @@
             c.description,
             c.college,
             c.cover_image,
-            c.invite_code,
+            tc.invite_code,
             c.status,
             c.create_time
         FROM course c
@@ -102,5 +102,41 @@
         SET is_deleted = 1, update_time = NOW()
         WHERE course_id = #{courseId}
     </update>
+
+    <!-- 查询课程的学生列表 -->
+    <select id="selectStudentsByCourseId" resultType="com.boda.springboot.entity.User">
+        SELECT
+            u.user_id,
+            u.username,
+            u.real_name,
+            u.student_id,
+            u.college,
+            u.email,
+            u.phone,
+            u.avatar_url,
+            u.create_time
+        FROM user u
+        INNER JOIN student_course sc ON u.user_id = sc.student_id
+        WHERE sc.course_id = #{courseId}
+          AND u.is_deleted = 0
+        ORDER BY sc.create_time DESC
+    </select>
+
+    <!-- 查询课程的教师列表 -->
+    <select id="selectTeachersByCourseId" resultType="com.boda.springboot.entity.User">
+        SELECT
+            u.user_id,
+            u.username,
+            u.real_name,
+            u.phone,
+            u.email,
+            u.college,
+            u.job_title,
+            u.avatar_url
+        FROM user u
+        INNER JOIN teacher_course tc ON u.user_id = tc.teacher_id
+        WHERE tc.course_id = #{courseId}
+          AND u.is_deleted = 0
+    </select>
 
 </mapper>

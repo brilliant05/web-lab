@@ -48,6 +48,9 @@
         <if test="jobTitle != null and jobTitle != ''">
             AND job_title = #{jobTitle}
         </if>
+        <if test="college != null and college != ''">
+            AND college LIKE CONCAT('%', #{college}, '%')
+        </if>
         <if test="realName != null and realName != ''">
             AND real_name LIKE CONCAT('%', #{realName}, '%')
         </if>

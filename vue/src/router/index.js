@@ -147,6 +147,12 @@ const routes = [
         meta: { title: '我的课程' }
       },
       {
+        path: 'courses/:id',
+        name: 'TeacherCourseDetail',
+        component: () => import('../views/teacher/CourseDetail.vue'),
+        meta: { title: '课程详情' }
+      },
+      {
         path: 'resources',
         name: 'TeacherResources',
         component: () => import('../views/teacher/Resources.vue'),
@@ -157,6 +163,12 @@ const routes = [
         name: 'TeacherQuestions',
         component: () => import('../views/teacher/Questions.vue'),
         meta: { title: '答疑解惑' }
+      },
+      {
+        path: 'notifications',
+        name: 'TeacherNotifications',
+        component: () => import('../views/teacher/Notifications.vue'),
+        meta: { title: '消息通知' }
       },
       {
         path: 'profile',

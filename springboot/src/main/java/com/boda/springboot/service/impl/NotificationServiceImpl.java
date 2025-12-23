@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.boda.springboot.common.Constant;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -112,7 +113,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         Notification notification = new Notification();
         notification.setUserId(studentId);
-        notification.setNotificationType("ANSWER_REPLY");
+        notification.setNotificationType(Constant.NOTIFICATION_TYPE_ANSWER_REPLY);
         notification.setTitle("您的问题有新回答");
         notification.setContent(content);
         notification.setRelatedId(questionId);
@@ -131,7 +132,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         Notification notification = new Notification();
         notification.setUserId(userId);
-        notification.setNotificationType("SYSTEM");
+        notification.setNotificationType(Constant.NOTIFICATION_TYPE_SYSTEM);
         notification.setTitle(title);
         notification.setContent(content);
 
@@ -139,6 +140,36 @@ public class NotificationServiceImpl implements NotificationService {
 
         // 🚀 通过 WebSocket 实时推送通知给在线用户
         pushNotificationViaWebSocket(userId, notification);
+    }
+
+    @Override
+    @Transactional
+    public void createQuestionNotification(Long teacherId, Long studentId, Long questionId, String questionTitle, String courseName) {
+        log.info("创建新问题通知 - 教师ID: {}, 学生ID: {}, 问题ID: {}", teacherId, studentId, questionId);
+
+        // 查询学生信息
+        User student = userMapper.selectById(studentId);
+        String studentName = (student != null && student.getRealName() != null) ? student.getRealName() : "学生";
+
+        Notification notification = new Notification();
+        notification.setUserId(teacherId);
+        notification.setTitle("新问题提醒");
+        notification.setContent("学生 " + studentName + " 在课程《" + courseName + "》中提出了新问题：" + questionTitle);
+        notification.setNotificationType(Constant.NOTIFICATION_TYPE_NEW_QUESTION);
+        notification.setRelatedId(questionId);
+        notification.setIsRead(0);
+
+        notificationMapper.save(notification);
+
+        // 发送WebSocket通知
+        Map<String, Object> wsData = new HashMap<>();
+        wsData.put("type", "notification");
+        wsData.put("title", notification.getTitle());
+        wsData.put("content", notification.getContent());
+        wsData.put("relatedId", questionId);
+        wsData.put("notificationId", notification.getNotificationId());
+
+        NotificationWebSocket.sendNotification(teacherId, wsData);
     }
 
     /**

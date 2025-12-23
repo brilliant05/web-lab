@@ -72,4 +72,9 @@ public class Course implements Serializable {
      * 逻辑删除: 0-未删除, 1-已删除
      */
     private Integer isDeleted;
+
+    /**
+     * 邀请码（非数据库字段，仅在查询教师课程时使用）
+     */
+    private String inviteCode;
 }

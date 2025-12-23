@@ -230,7 +230,7 @@ public class QuestionServiceImpl implements QuestionService {
         // 发送通知给提问学生
         if (notificationService != null) {
             try {
-                notificationService.createAnswerNotification(question.getStudentId(), questionId, question.getQuestionTitle());
+                notificationService.createAnswerNotification(question.getStudentId(), teacherId, questionId, question.getQuestionTitle());
             } catch (Exception e) {
                 log.error("发送通知失败", e);
             }

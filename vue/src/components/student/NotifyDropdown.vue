@@ -33,7 +33,7 @@
             @click="handleItemClick(notification)"
           >
             <div class="notification-item-content">
-              <div class="notification-item-title">{{ notification.title }}</div>
+              <div class="notification-item-title">{{ notification.content || notification.title }}</div>
               <div class="notification-item-time">{{ formatTime(notification.createTime) }}</div>
             </div>
             <div v-if="notification.isRead === 0 || notification.isRead === false" class="unread-dot"></div>
@@ -250,20 +250,33 @@ defineExpose({
 .notification-item-content {
   flex: 1;
   min-width: 0;
+  position: relative;
+  padding-right: 8px;
+  padding-bottom: 4px;
 }
 
 .notification-item-title {
   font-size: 14px;
   color: #303133;
-  margin-bottom: 4px;
+  margin-bottom: 20px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.4;
+  word-wrap: break-word;
+  max-height: 2.8em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .notification-item-time {
   font-size: 12px;
   color: #909399;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  white-space: nowrap;
 }
 
 .unread-dot {

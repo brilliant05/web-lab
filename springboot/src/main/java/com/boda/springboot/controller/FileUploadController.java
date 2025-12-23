@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @RestController
 @Slf4j
-@RequestMapping("/upload")
+@RequestMapping("/files")
 public class FileUploadController {
 
     @Autowired

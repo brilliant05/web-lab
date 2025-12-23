@@ -62,11 +62,7 @@ export const deleteCourse = (courseId) =>
 
 // 文件上传接口
 export const uploadCourseCover = (formData) =>
-  http.post('/files/course-cover', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
+  http.post('/files/course-cover', formData)
 
 // 资源管理接口
 export const getResourceList = (params = {}) =>
@@ -88,11 +84,7 @@ export const uncollectResource = (resourceId) =>
   http.delete(`/resources/${resourceId}/collect`)
 
 export const uploadResource = (formData) =>
-  http.post('/resources', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
+  http.post('/resources', formData)
 
 export const updateResource = (resourceId, data) =>
   http.put(`/resources/${resourceId}`, data)
@@ -108,11 +100,7 @@ export const getQuestionDetail = (questionId) =>
   http.get(`/questions/${questionId}`)
 
 export const submitQuestion = (formData) =>
-  http.post('/questions', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
+  http.post('/questions', formData)
 
 export const updateQuestion = (questionId, data) =>
   http.put(`/questions/${questionId}`, data)
@@ -162,11 +150,7 @@ export const updatePassword = (data) =>
   http.put('/auth/password', data)
 
 export const uploadAvatar = (formData) =>
-  http.post('/files/avatar', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  })
+  http.post('/files/avatar', formData)
 
 // 便于按需扩展其它模块
 export default {

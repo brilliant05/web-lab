@@ -30,8 +30,12 @@ public interface NotificationService {
 
     /**
      * 创建问题被回答的通知
+     * @param studentId 学生ID
+     * @param teacherId 教师ID
+     * @param questionId 问题ID
+     * @param questionTitle 问题标题
      */
-    void createAnswerNotification(Long studentId, Long questionId, String questionTitle);
+    void createAnswerNotification(Long studentId, Long teacherId, Long questionId, String questionTitle);
 
     /**
      * 创建系统通知

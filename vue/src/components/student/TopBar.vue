@@ -59,8 +59,8 @@ const handleSearch = () => {
   justify-content: space-between;
   height: 64px;
   padding: 0 24px;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background-color: #1e3a5f;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .top-bar-left {
@@ -78,7 +78,7 @@ const handleSearch = () => {
 .system-name {
   font-size: 16px;
   font-weight: 500;
-  color: #303133;
+  color: #fff;
   white-space: nowrap;
 }
 
@@ -95,6 +95,15 @@ const handleSearch = () => {
 .search-input :deep(.el-input__wrapper) {
   border-radius: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.search-input :deep(.el-input__inner) {
+  color: #303133;
+}
+
+.search-input :deep(.el-input__prefix) {
+  color: #909399;
 }
 
 .top-bar-right {

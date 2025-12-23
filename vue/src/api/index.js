@@ -60,6 +60,14 @@ export const updateCourse = (courseId, data) =>
 export const deleteCourse = (courseId) =>
   http.delete(`/courses/${courseId}`)
 
+// 文件上传接口
+export const uploadCourseCover = (formData) =>
+  http.post('/files/course-cover', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+
 // 资源管理接口
 export const getResourceList = (params = {}) =>
   http.get('/resources', { params })
@@ -86,12 +94,46 @@ export const uploadResource = (formData) =>
     }
   })
 
+export const updateResource = (resourceId, data) =>
+  http.put(`/resources/${resourceId}`, data)
+
+export const getMyUploads = (params = {}) =>
+  http.get('/resources/my-uploads', { params })
+
 // 问答管理接口
 export const getQuestionList = (params = {}) =>
   http.get('/questions', { params })
 
+export const getQuestionDetail = (questionId) =>
+  http.get(`/questions/${questionId}`)
+
+export const submitQuestion = (formData) =>
+  http.post('/questions', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+
+export const updateQuestion = (questionId, data) =>
+  http.put(`/questions/${questionId}`, data)
+
 export const deleteQuestion = (questionId) =>
   http.delete(`/questions/${questionId}`)
+
+export const getMyQuestions = (params = {}) =>
+  http.get('/questions/my-questions', { params })
+
+export const likeAnswer = (answerId) =>
+  http.post(`/answers/${answerId}/like`)
+
+export const unlikeAnswer = (answerId) =>
+  http.delete(`/answers/${answerId}/like`)
+
+export const updateAnswer = (answerId, data) =>
+  http.put(`/answers/${answerId}`, data)
+
+export const deleteAnswer = (answerId) =>
+  http.delete(`/answers/${answerId}`)
 
 // 通知管理接口
 export const getNotificationList = (params = {}) =>
@@ -108,6 +150,23 @@ export const markAllNotificationsAsRead = () =>
 
 export const deleteNotification = (notificationId) =>
   http.delete(`/notifications/${notificationId}`)
+
+// 用户信息接口
+export const getCurrentUser = () =>
+  http.get('/users/current')
+
+export const updateUserProfile = (data) =>
+  http.put('/users/profile', data)
+
+export const updatePassword = (data) =>
+  http.put('/auth/password', data)
+
+export const uploadAvatar = (formData) =>
+  http.post('/files/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
 
 // 便于按需扩展其它模块
 export default {

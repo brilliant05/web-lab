@@ -274,7 +274,6 @@ const handleLogin = async () => {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.82), rgba(99, 102, 241, 0.78));
   display: flex;
   flex-direction: column;
   justify-content: flex-end;

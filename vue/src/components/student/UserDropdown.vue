@@ -93,18 +93,18 @@ const handleLogout = async () => {
 }
 
 .user-trigger:hover {
-  background-color: #f5f7fa;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .username {
   font-size: 14px;
-  color: #303133;
+  color: #fff;
   font-weight: 500;
 }
 
 .dropdown-icon {
   font-size: 12px;
-  color: #909399;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 :deep(.el-dropdown-menu__item) {

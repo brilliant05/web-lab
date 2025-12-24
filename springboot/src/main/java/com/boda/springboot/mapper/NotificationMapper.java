@@ -49,5 +49,10 @@ public interface NotificationMapper {
      * 删除过期通知
      */
     void deleteExpired(@Param("days") Integer days);
+
+    /**
+     * 批量插入通知
+     */
+    void batchInsert(@Param("notifications") List<Notification> notifications);
 }
 

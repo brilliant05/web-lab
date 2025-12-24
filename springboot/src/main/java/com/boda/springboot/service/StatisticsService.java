@@ -1,5 +1,7 @@
 package com.boda.springboot.service;
 
+import com.boda.springboot.vo.HotCourseVO;
+import com.boda.springboot.vo.HotResourceVO;
 import com.boda.springboot.vo.StatisticsOverviewVO;
 
 /**
@@ -11,5 +13,17 @@ public interface StatisticsService {
      * @return 统计数据
      */
     StatisticsOverviewVO getOverview();
+
+    /**
+     * 获取热门课程
+     * @param limit 限制条数
+     */
+    java.util.List<HotCourseVO> getHotCourses(int limit);
+
+    /**
+     * 获取热门资源
+     * @param limit 限制条数
+     */
+    java.util.List<HotResourceVO> getHotResources(int limit);
 }
 

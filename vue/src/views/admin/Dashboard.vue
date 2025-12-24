@@ -85,18 +85,33 @@
           <template #header>
             <div class="card-header">
               <span>最新通知</span>
+              <el-button
+                link
+                type="primary"
+                size="small"
+                @click="goToNotifications"
+                style="float: right"
+              >
+                查看全部
+              </el-button>
             </div>
           </template>
-          <el-timeline>
-            <el-timeline-item
-              v-for="item in notifications"
-              :key="item.id"
-              :timestamp="item.time"
-              placement="top"
-            >
-              {{ item.content }}
-            </el-timeline-item>
-          </el-timeline>
+          <div v-loading="notificationsLoading">
+            <el-empty v-if="!notificationsLoading && notifications.length === 0" description="暂无通知" />
+            <el-timeline v-else>
+              <el-timeline-item
+                v-for="item in notifications"
+                :key="item.notificationId"
+                :timestamp="formatDateTime(item.createTime)"
+                placement="top"
+              >
+                <div class="notification-item" @click="goToNotifications">
+                  <div class="notification-title">{{ item.title }}</div>
+                  <div class="notification-content">{{ item.content || item.title }}</div>
+                </div>
+              </el-timeline-item>
+            </el-timeline>
+          </div>
         </el-card>
       </el-col>
 
@@ -137,7 +152,7 @@ import {
   DataAnalysis,
   BellFilled
 } from '@element-plus/icons-vue'
-import { getStatisticsOverview } from '@/api'
+import { getStatisticsOverview, getNotificationList } from '@/api'
 
 const router = useRouter()
 
@@ -169,6 +184,7 @@ const loadStatistics = async () => {
 // 组件挂载时加载数据
 onMounted(() => {
   loadStatistics()
+  loadNotifications()
 })
 
 // 快捷操作 - 使用markRaw标记图标组件，避免响应式包装
@@ -182,12 +198,69 @@ const quickActions = ref([
 ])
 
 // 最新通知
-const notifications = ref([
-  { id: 1, content: '系统管理员发布了新的通知', time: '2025-12-09 10:00' },
-  { id: 2, content: '新增课程《数据结构》', time: '2025-12-09 09:30' },
-  { id: 3, content: '教师张三上传了新的学习资源', time: '2025-12-09 09:00' },
-  { id: 4, content: '学生李四提交了新问题', time: '2025-12-09 08:30' }
-])
+const notifications = ref([])
+const notificationsLoading = ref(false)
+
+// 格式化日期时间
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  try {
+    if (typeof dateTime === 'string') {
+      if (dateTime.includes(' ') && dateTime.length > 10) {
+        return dateTime.substring(0, 16).replace('T', ' ')
+      }
+      const d = new Date(dateTime)
+      if (isNaN(d.getTime())) return dateTime
+      return d.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace(/\//g, '-')
+    }
+    const d = new Date(dateTime)
+    if (isNaN(d.getTime())) return String(dateTime)
+    return d.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/\//g, '-')
+  } catch (e) {
+    console.error('日期格式化错误:', e, dateTime)
+    return String(dateTime)
+  }
+}
+
+// 加载最新通知（只加载前5条）
+const loadNotifications = async () => {
+  notificationsLoading.value = true
+  try {
+    const response = await getNotificationList({
+      pageNum: 1,
+      pageSize: 5,
+      notificationType: 'SYSTEM' // 只显示系统通知
+    })
+    if (response && response.code === 200 && response.data) {
+      const page = response.data
+      notifications.value = page.records || []
+    } else {
+      notifications.value = []
+    }
+  } catch (error) {
+    console.error('加载通知列表失败:', error)
+    notifications.value = []
+  } finally {
+    notificationsLoading.value = false
+  }
+}
+
+// 跳转到通知管理页面
+const goToNotifications = () => {
+  router.push('/admin/notifications')
+}
 
 const handleAction = (action) => {
   ElMessage.success(`跳转到：${action.name}`)
@@ -286,6 +359,39 @@ const handleAction = (action) => {
   font-size: 16px;
   font-weight: bold;
   color: #303133;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 通知项样式 */
+.notification-item {
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+  background-color: #f5f7fa;
+}
+
+.notification-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.notification-content {
+  font-size: 13px;
+  color: #606266;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 @media screen and (max-width: 768px) {

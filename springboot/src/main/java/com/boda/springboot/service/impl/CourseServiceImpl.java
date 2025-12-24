@@ -276,4 +276,15 @@ public class CourseServiceImpl implements CourseService {
     public List<Course> getTeacherCourses(Long teacherId) {
         return courseMapper.selectByTeacherId(teacherId);
     }
+
+    /**
+     * 获取学生的课程列表
+     * @param studentId 学生ID
+     * @return 课程列表
+     */
+    @Override
+    public List<Course> getStudentCourses(Long studentId) {
+        log.info("查询学生课程列表 - 学生ID: {}", studentId);
+        return courseMapper.selectByStudentId(studentId);
+    }
 }

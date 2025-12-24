@@ -5,6 +5,7 @@ import com.boda.springboot.entity.Course;
 import com.boda.springboot.entity.User;
 import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -90,4 +91,16 @@ public interface CourseMapper {
      * @return 教师列表
      */
     List<User> selectTeachersByCourseId(Long courseId);
+
+    /**
+     * 查询热门课程（按选课学生数降序）
+     */
+    List<com.boda.springboot.vo.HotCourseVO> selectHotCourses(@org.apache.ibatis.annotations.Param("limit") Integer limit);
+
+    /**
+     * 查询学生的课程列表
+     * @param studentId 学生ID
+     * @return 课程列表
+     */
+    List<Course> selectByStudentId(@Param("studentId") Long studentId);
 }

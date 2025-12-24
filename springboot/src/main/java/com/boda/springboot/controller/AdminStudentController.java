@@ -11,6 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @Slf4j
 @RequestMapping("/admin/students") // 对应API基础路径：/api/v1/admin/students
@@ -22,12 +25,29 @@ public class AdminStudentController {
     /**
      * 新增学生
      * 对应API：POST /api/v1/admin/students
+     * Body: { "username": "xxx", "realName": "xxx", ..., "courseIds": [1, 2, 3] }
      */
     @PostMapping
     @RequireRole(Constant.ROLE_ADMIN)
-    public Result<String> saveStudent(@RequestBody User student) {
-        log.info("添加学生: {}", student);
-        adminStudentService.saveStudent(student);
+    public Result<String> saveStudent(@RequestBody Map<String, Object> params) {
+        log.info("添加学生: {}", params);
+        
+        // 提取课程ID列表
+        @SuppressWarnings("unchecked")
+        List<Integer> courseIdsRaw = (List<Integer>) params.get("courseIds");
+        List<Long> courseIds = null;
+        if (courseIdsRaw != null && !courseIdsRaw.isEmpty()) {
+            courseIds = courseIdsRaw.stream().map(Long::valueOf).collect(java.util.stream.Collectors.toList());
+        }
+        
+        // 移除courseIds，构建User对象
+        params.remove("courseIds");
+        
+        // 使用ObjectMapper转换为User对象
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        User student = objectMapper.convertValue(params, User.class);
+        
+        adminStudentService.saveStudent(student, courseIds);
         return Result.success("学生添加成功！");
     }
 

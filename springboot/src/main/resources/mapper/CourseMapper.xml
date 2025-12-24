@@ -139,4 +139,38 @@
           AND u.is_deleted = 0
     </select>
 
+    <!-- 热门课程：按选课学生数降序 -->
+    <select id="selectHotCourses" resultType="com.boda.springboot.vo.HotCourseVO">
+        SELECT
+            c.course_id AS courseId,
+            c.course_name AS courseName,
+            c.college,
+            c.cover_image AS coverImage,
+            COUNT(sc.student_id) AS studentCount
+        FROM course c
+        LEFT JOIN student_course sc ON c.course_id = sc.course_id
+        WHERE c.is_deleted = 0
+        GROUP BY c.course_id, c.course_name, c.college, c.cover_image
+        ORDER BY studentCount DESC, c.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询学生的课程列表 -->
+    <select id="selectByStudentId" resultType="com.boda.springboot.entity.Course">
+        SELECT
+            c.course_id,
+            c.course_name,
+            c.course_code,
+            c.description,
+            c.college,
+            c.cover_image,
+            c.status,
+            c.create_time
+        FROM course c
+        INNER JOIN student_course sc ON c.course_id = sc.course_id
+        WHERE sc.student_id = #{studentId}
+          AND c.is_deleted = 0
+        ORDER BY sc.create_time DESC
+    </select>
+
 </mapper>

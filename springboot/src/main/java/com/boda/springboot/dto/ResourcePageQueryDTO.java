@@ -3,6 +3,7 @@ package com.boda.springboot.dto;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 资源分页查询DTO
@@ -51,5 +52,10 @@ public class ResourcePageQueryDTO implements Serializable {
      * 排序方向：asc、desc
      */
     private String orderDir = "desc";
+
+    /**
+     * 学生已加入的课程ID列表（用于权限过滤）
+     */
+    private List<Long> enrolledCourseIds;
 }
 

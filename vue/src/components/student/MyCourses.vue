@@ -10,6 +10,7 @@
         v-for="course in courses"
         :key="course.courseId"
         :course="course"
+        :is-joined="true"
       />
 
       <el-empty

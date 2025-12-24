@@ -4,6 +4,8 @@ import com.boda.springboot.mapper.CourseMapper;
 import com.boda.springboot.mapper.ResourceMapper;
 import com.boda.springboot.mapper.UserMapper;
 import com.boda.springboot.service.StatisticsService;
+import com.boda.springboot.vo.HotCourseVO;
+import com.boda.springboot.vo.HotResourceVO;
 import com.boda.springboot.vo.StatisticsOverviewVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,6 +53,19 @@ public class StatisticsServiceImpl implements StatisticsService {
         overview.setTotalAnswers(0L);
 
         return overview;
+    }
+
+    @Override
+    public java.util.List<HotCourseVO> getHotCourses(int limit) {
+        // 默认限制 5 条，避免非法参数
+        int safeLimit = limit > 0 && limit <= 20 ? limit : 5;
+        return courseMapper.selectHotCourses(safeLimit);
+    }
+
+    @Override
+    public java.util.List<HotResourceVO> getHotResources(int limit) {
+        int safeLimit = limit > 0 && limit <= 20 ? limit : 5;
+        return resourceMapper.selectHotResources(safeLimit);
     }
 }
 

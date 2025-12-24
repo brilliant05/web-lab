@@ -179,6 +179,27 @@
             :prefix-icon="Iphone"
           />
         </el-form-item>
+
+        <el-form-item label="分配课程">
+          <el-select
+            v-model="formData.courseIds"
+            placeholder="请选择课程（可选，可多选）"
+            multiple
+            filterable
+            style="width: 100%"
+            :loading="coursesLoading"
+          >
+            <el-option
+              v-for="course in courseList"
+              :key="course.courseId"
+              :label="`${course.courseName} (${course.courseCode})`"
+              :value="course.courseId"
+            />
+          </el-select>
+          <div style="font-size: 12px; color: #909399; margin-top: 4px">
+            可选择多个课程，留空表示暂不分配课程
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -215,7 +236,7 @@
 </template>
 
 <script setup>
-import { addStudent, deleteStudent, getStudentList, updateStudent, updateStudentStatus } from '@/api'
+import { addStudent, deleteStudent, getStudentList, updateStudent, updateStudentStatus, getCourseList } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 import {
   ArrowDown, Delete, Edit,
@@ -271,8 +292,28 @@ const formData = reactive({
   studentId: '',
   college: '',
   email: '',
-  phone: ''
+  phone: '',
+  courseIds: [] // 课程ID列表
 })
+
+// 课程列表
+const courseList = ref([])
+const coursesLoading = ref(false)
+
+// 加载课程列表
+const loadCourseList = async () => {
+  coursesLoading.value = true
+  try {
+    const response = await getCourseList({ pageNum: 1, pageSize: 1000, status: 1 }) // 获取所有开放的课程
+    if (response && response.code === 200 && response.data) {
+      courseList.value = response.data.records || []
+    }
+  } catch (error) {
+    console.error('加载课程列表失败:', error)
+  } finally {
+    coursesLoading.value = false
+  }
+}
 
 const rules = {
   username: [
@@ -314,9 +355,14 @@ const handleRefresh = () => {
 const handleAdd = () => {
   dialogTitle.value = '新增学生'
   Object.keys(formData).forEach(key => {
-    formData[key] = ''
+    if (key === 'courseIds') {
+      formData[key] = []
+    } else {
+      formData[key] = ''
+    }
   })
   dialogVisible.value = true
+  loadCourseList() // 加载课程列表
 }
 
 // 批量删除
@@ -393,7 +439,7 @@ const handleSubmit = async () => {
             submitLoading.value = false
           })
       } else {
-        // 新增：只传用户名、学号，其他可选
+        // 新增：只传用户名、学号，其他可选，包括课程ID列表
         const payload = {
           username: data.username,
           studentId: data.studentId,
@@ -401,6 +447,10 @@ const handleSubmit = async () => {
           college: data.college || undefined,
           email: data.email || undefined,
           phone: data.phone || undefined
+        }
+        // 如果有选择的课程，添加courseIds
+        if (data.courseIds && data.courseIds.length > 0) {
+          payload.courseIds = data.courseIds
         }
         addStudent(payload)
           .then(() => {

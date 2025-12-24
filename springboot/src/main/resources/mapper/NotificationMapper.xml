@@ -84,5 +84,31 @@
         WHERE create_time &lt; DATE_SUB(NOW(), INTERVAL #{days} DAY)
     </delete>
 
+    <!-- 批量插入通知 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO notification (
+            user_id,
+            notification_type,
+            title,
+            content,
+            related_id,
+            related_type,
+            is_read,
+            create_time
+        ) VALUES
+        <foreach collection="notifications" item="item" separator=",">
+            (
+                #{item.userId},
+                #{item.notificationType},
+                #{item.title},
+                #{item.content},
+                #{item.relatedId},
+                #{item.relatedType},
+                0,
+                NOW()
+            )
+        </foreach>
+    </insert>
+
 </mapper>
 

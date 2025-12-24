@@ -65,6 +65,47 @@
       </el-table-column>
     </el-table>
 
+    <!-- 发布通知弹窗 -->
+    <el-dialog
+      v-model="dialogVisible"
+      title="发布系统通知"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <el-form label-width="80px" :model="dialogForm">
+        <el-form-item label="通知标题" required>
+          <el-input
+            v-model="dialogForm.title"
+            placeholder="请输入通知标题"
+            maxlength="100"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="通知内容" required>
+          <el-input
+            v-model="dialogForm.content"
+            type="textarea"
+            :rows="5"
+            placeholder="请输入通知内容"
+            maxlength="500"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="发送范围">
+          <span>当前版本：向全体用户发送系统通知</span>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取 消</el-button>
+          <el-button type="primary" :loading="dialogLoading" @click="handleDialogConfirm">
+            确 定
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
     <div class="pagination-container">
       <el-pagination
         v-model:current-page="pagination.currentPage"
@@ -81,9 +122,9 @@
 
 <script setup>
 import { ArrowDown, Delete, Edit, Plus, Refresh, Search } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
-import { getNotificationList } from '@/api'
+import { createSystemNotification, getNotificationList } from '@/api'
 
 const searchKeyword = ref('')
 const loading = ref(false)
@@ -97,12 +138,25 @@ const pagination = reactive({
 
 const tableData = ref([])
 
+// 发布通知弹窗相关状态
+const dialogVisible = ref(false)
+const dialogLoading = ref(false)
+const dialogForm = reactive({
+  title: '',
+  content: ''
+})
+
+const resetDialogForm = () => {
+  dialogForm.title = ''
+  dialogForm.content = ''
+}
+
 const getTypeColor = (type) => {
   const colors = {
-    'SYSTEM': 'info',
-    'ANSWER_REPLY': 'success',
-    'RESOURCE_AUDIT': 'warning',
-    'COURSE': 'primary'
+    SYSTEM: 'info',
+    ANSWER_REPLY: 'success',
+    RESOURCE_AUDIT: 'warning',
+    COURSE: 'primary'
   }
   return colors[type] || 'info'
 }
@@ -118,8 +172,46 @@ const handleRefresh = () => {
   loadTableData()
 }
 
+// 打开发布通知弹窗
 const handleAdd = () => {
-  ElMessage.info('打开发布通知对话框')
+  resetDialogForm()
+  dialogVisible.value = true
+}
+
+// 确认发布通知（当前为全体用户广播）
+const handleDialogConfirm = async () => {
+  if (!dialogForm.title || !dialogForm.title.trim()) {
+    ElMessage.warning('请填写通知标题')
+    return
+  }
+  if (!dialogForm.content || !dialogForm.content.trim()) {
+    ElMessage.warning('请填写通知内容')
+    return
+  }
+
+  dialogLoading.value = true
+  try {
+    // userId 传 null 表示全体用户，由后端按约定处理
+    const res = await createSystemNotification({
+      userId: null,
+      title: dialogForm.title.trim(),
+      content: dialogForm.content.trim()
+    })
+    if (res && res.code === 200) {
+      ElMessage.success(res.message || '通知发布成功')
+      dialogVisible.value = false
+      // 重新加载列表，展示新通知
+      pagination.currentPage = 1
+      await loadTableData()
+    } else {
+      ElMessage.error(res?.message || '通知发布失败')
+    }
+  } catch (error) {
+    console.error('发布通知失败:', error)
+    ElMessage.error('发布通知失败，请稍后重试')
+  } finally {
+    dialogLoading.value = false
+  }
 }
 
 const handleBatchDelete = () => {
@@ -163,25 +255,29 @@ const formatDateTime = (dateTime) => {
       if (dateTime.includes(' ') && dateTime.length > 10) return dateTime
       const d = new Date(dateTime)
       if (isNaN(d.getTime())) return dateTime
-      return d.toLocaleString('zh-CN', {
+      return d
+        .toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        })
+        .replace(/\\//g, '-')
+    }
+    const d = new Date(dateTime)
+    if (isNaN(d.getTime())) return String(dateTime)
+    return d
+      .toLocaleString('zh-CN', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
-      }).replace(/\\//g, '-')
-    }
-    const d = new Date(dateTime)
-    if (isNaN(d.getTime())) return String(dateTime)
-    return d.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).replace(/\\//g, '-')
+      })
+      .replace(/\\//g, '-')
   } catch (e) {
     console.error('日期格式化错误:', e, dateTime)
     return String(dateTime)

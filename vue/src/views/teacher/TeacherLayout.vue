@@ -59,6 +59,22 @@ const breadcrumbs = computed(() => {
     });
   }
 
+  // 特殊处理：资源相关页面添加"资源管理"面包屑
+  if (['TeacherResourceRecycleBin', 'TeacherResourcePublish', 'TeacherResourceDetail'].includes(route.name)) {
+    items.splice(items.length - 1, 0, {
+      title: '资源管理',
+      path: '/teacher/resources'
+    });
+  }
+
+  // 特殊处理：问题详情页添加"答疑解惑"面包屑
+  if (route.name === 'TeacherQuestionDetail') {
+    items.splice(items.length - 1, 0, {
+      title: '答疑解惑',
+      path: '/teacher/questions'
+    });
+  }
+
   return items;
 });
 </script>

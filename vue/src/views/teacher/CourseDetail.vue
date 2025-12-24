@@ -170,138 +170,24 @@
       </el-tabs>
     </el-card>
 
-    <!-- 资源上传/编辑对话框 -->
-    <el-dialog
-      v-model="resourceDialogVisible"
-      :title="resourceFormType === 'add' ? '上传资源' : '编辑资源'"
-      width="500px"
-    >
-      <el-form :model="resourceForm" label-width="80px" ref="resourceFormRef" :rules="resourceRules">
-        <el-form-item label="标题" prop="resourceTitle">
-          <el-input v-model="resourceForm.resourceTitle" placeholder="请输入资源标题" />
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="resourceForm.description" type="textarea" placeholder="请输入资源描述" />
-        </el-form-item>
-        <el-form-item label="可见性" prop="visibility">
-          <el-radio-group v-model="resourceForm.visibility">
-            <el-radio label="PUBLIC">公开 (所有学生可见)</el-radio>
-            <el-radio label="COURSE_ONLY">私有 (仅本课程学生可见)</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="文件" prop="file" v-if="resourceFormType === 'add'">
-          <el-upload
-            class="upload-demo"
-            drag
-            action="#"
-            :auto-upload="false"
-            :on-change="handleFileChange"
-            :limit="1"
-            :on-exceed="handleExceed"
-          >
-            <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-            <div class="el-upload__text">
-              拖拽文件到此处或 <em>点击上传</em>
-            </div>
-          </el-upload>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="resourceDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitResource" :loading="resourceSubmitLoading">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
 
-    <!-- 问题详情与回答对话框 -->
-    <el-dialog
-      v-model="questionDialogVisible"
-      title="问题详情"
-      width="700px"
-      destroy-on-close
-      @opened="initEditor"
-      @closed="destroyEditor"
-    >
-      <div class="question-detail" v-if="currentQuestion">
-        <div class="detail-header">
-          <h3>{{ currentQuestion.questionTitle }}</h3>
-          <div class="detail-meta">
-            <span>提问者: {{ currentQuestion.studentName }}</span>
-            <span>时间: {{ currentQuestion.createTime }}</span>
-          </div>
-        </div>
-        <div class="detail-content">
-          {{ currentQuestion.questionContent }}
-        </div>
-        <div class="detail-images" v-if="currentQuestion.imageUrls">
-           <!-- 图片展示逻辑 -->
-        </div>
 
-        <el-divider content-position="left">教师回答</el-divider>
 
-        <div v-if="currentQuestion.answers && currentQuestion.answers.length > 0" class="answer-list">
-          <div v-for="answer in currentQuestion.answers" :key="answer.answerId" class="answer-item">
-            <div class="answer-meta">
-              <span class="teacher-name">{{ answer.teacherName }}</span>
-              <span class="answer-time">{{ answer.createTime }}</span>
-              <div class="answer-actions">
-                <el-button type="primary" link :icon="Edit" @click="handleEditAnswer(answer)">编辑</el-button>
-                <el-button type="danger" link :icon="Delete" @click="handleDeleteAnswer(answer.answerId)">删除</el-button>
-              </div>
-            </div>
-            <div class="answer-content" v-html="answer.answerContent"></div>
-            <div v-if="answer.imageUrls" class="answer-images">
-              <el-image 
-                v-for="(url, index) in answer.imageUrls.split(',')" 
-                :key="index" 
-                :src="url" 
-                :preview-src-list="answer.imageUrls.split(',')"
-                class="answer-image"
-              />
-            </div>
-          </div>
-        </div>
-        <div v-else class="no-answer">暂无回答</div>
-
-        <div class="answer-form" style="margin-top: 20px;">
-          <h4>{{ editingAnswerId ? '修改回答' : '撰写回答' }}</h4>
-          <div style="border: 1px solid #ccc">
-            <div ref="toolbarContainer" style="border-bottom: 1px solid #ccc"></div>
-            <div ref="editorContainer" style="height: 300px; overflow-y: hidden;"></div>
-          </div>
-          <div style="margin-top: 10px; text-align: right;">
-            <el-button v-if="editingAnswerId" @click="handleCancelEdit">取消修改</el-button>
-            <el-button type="primary" @click="submitAnswer" :loading="answerSubmitLoading">
-              {{ editingAnswerId ? '保存修改' : '提交回答' }}
-            </el-button>
-          </div>
-        </div>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import {
-  answerQuestion,
-  deleteAnswer,
-  deleteResource,
-  getCourseById,
-  getCourseStudents,
-  getQuestionDetail,
-  getQuestionList,
-  getResourceList,
-  updateAnswer,
-  updateResource,
-  uploadResource
+    deleteResource,
+    getCourseById,
+    getCourseStudents,
+    getQuestionList,
+    getResourceList
 } from '@/api'
 import CourseCover from '@/components/CourseCover.vue'
-import { Clock, Delete, Edit, Refresh, Search, Upload, UploadFilled, User, View } from '@element-plus/icons-vue'
-import { createEditor, createToolbar } from '@wangeditor/editor'
-import '@wangeditor/editor/dist/css/style.css'
+import { Clock, Refresh, Search, Upload, User, View } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -337,22 +223,6 @@ const resourcePagination = reactive({
   pageSize: 10,
   total: 0
 })
-const resourceDialogVisible = ref(false)
-const resourceFormType = ref('add')
-const resourceSubmitLoading = ref(false)
-const resourceForm = reactive({
-  resourceId: null,
-  resourceTitle: '',
-  description: '',
-  visibility: 'PUBLIC',
-  file: null
-})
-const resourceFormRef = ref(null)
-const resourceRules = {
-  resourceTitle: [{ required: true, message: '请输入标题', trigger: 'blur' }],
-  visibility: [{ required: true, message: '请选择可见性', trigger: 'change' }],
-  file: [{ required: true, message: '请上传文件', trigger: 'change' }]
-}
 
 // 问答管理
 const questionsLoading = ref(false)
@@ -362,73 +232,6 @@ const questionPagination = reactive({
   pageNum: 1,
   pageSize: 10,
   total: 0
-})
-const questionDialogVisible = ref(false)
-const currentQuestion = ref(null)
-const answerSubmitLoading = ref(false)
-const editingAnswerId = ref(null)
-
-// Editor related
-const editorRef = shallowRef()
-const toolbarContainer = shallowRef()
-const editorContainer = shallowRef()
-const valueHtml = ref('')
-const toolbarConfig = {}
-const editorConfig = { 
-  placeholder: '请输入内容...',
-  MENU_CONF: {
-    uploadImage: {
-      server: 'http://localhost:8080/api/v1/files/upload',
-      fieldName: 'file',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      },
-      customInsert(res, insertFn) {
-        if (res.code === 200) {
-          insertFn(res.data.url, '', '')
-        } else {
-          ElMessage.error(res.msg || '上传图片失败')
-        }
-      }
-    }
-  },
-  onChange(editor) {
-    valueHtml.value = editor.getHtml()
-  }
-}
-
-const initEditor = () => {
-  if (editorRef.value) return 
-  
-  nextTick(() => {
-    if (!editorContainer.value) return
-    
-    const editor = createEditor({
-      selector: editorContainer.value,
-      html: valueHtml.value,
-      config: editorConfig,
-      mode: 'default'
-    })
-    editorRef.value = editor
-
-    const toolbar = createToolbar({
-      editor,
-      selector: toolbarContainer.value,
-      config: toolbarConfig,
-      mode: 'default'
-    })
-  })
-}
-
-const destroyEditor = () => {
-  const editor = editorRef.value
-  if (editor == null) return
-  editor.destroy()
-  editorRef.value = null
-}
-
-onBeforeUnmount(() => {
-  destroyEditor()
 })
 
 // 初始化
@@ -441,6 +244,7 @@ onMounted(async () => {
   await loadCourseInfo()
   loadStudents() // 默认加载学生
 })
+
 
 const handleTabClick = (tab) => {
   if (tab.paneName === 'students') {
@@ -530,75 +334,23 @@ const formatFileSize = (bytes) => {
 }
 
 const handleUploadResource = () => {
-  resourceFormType.value = 'add'
-  resourceForm.resourceId = null
-  resourceForm.resourceTitle = ''
-  resourceForm.description = ''
-  resourceForm.visibility = 'PUBLIC'
-  resourceForm.file = null
-  resourceDialogVisible.value = true
+  router.push({
+    path: '/teacher/resources/publish',
+    query: { courseId: courseId }
+  })
 }
 
 const handleEditResource = (row) => {
-  resourceFormType.value = 'edit'
-  resourceForm.resourceId = row.resourceId
-  resourceForm.resourceTitle = row.resourceTitle
-  resourceForm.description = row.description
-  resourceForm.visibility = row.visibility
-  resourceDialogVisible.value = true
-}
-
-const handleFileChange = (file) => {
-  resourceForm.file = file.raw
-}
-
-const handleExceed = (files) => {
-  ElMessage.warning('只能上传一个文件，请先删除旧文件')
-}
-
-const submitResource = async () => {
-  if (!resourceFormRef.value) return
-  
-  // 编辑模式下不需要校验文件
-  if (resourceFormType.value === 'edit') {
-    // 简单校验
-    if (!resourceForm.resourceTitle) {
-      ElMessage.warning('请输入标题')
-      return
+  router.push({
+    path: '/teacher/resources/publish',
+    query: {
+      id: row.resourceId,
+      courseId: row.courseId,
+      title: row.resourceTitle,
+      description: row.description,
+      visibility: row.visibility
     }
-  } else {
-    await resourceFormRef.value.validate()
-  }
-
-  resourceSubmitLoading.value = true
-  try {
-    if (resourceFormType.value === 'add') {
-      const formData = new FormData()
-      formData.append('file', resourceForm.file)
-      formData.append('resourceTitle', resourceForm.resourceTitle)
-      formData.append('description', resourceForm.description || '')
-      formData.append('courseId', courseId)
-      formData.append('visibility', resourceForm.visibility)
-      
-      await uploadResource(formData)
-      ElMessage.success('上传成功')
-    } else {
-      const data = {
-        resourceTitle: resourceForm.resourceTitle,
-        description: resourceForm.description,
-        visibility: resourceForm.visibility
-      }
-      await updateResource(resourceForm.resourceId, data)
-      ElMessage.success('更新成功')
-    }
-    resourceDialogVisible.value = false
-    loadResources()
-  } catch (error) {
-    console.error('提交资源失败', error)
-    ElMessage.error('操作失败')
-  } finally {
-    resourceSubmitLoading.value = false
-  }
+  })
 }
 
 const handleDeleteResource = (row) => {
@@ -642,140 +394,12 @@ const handleQuestionPageChange = (page) => {
   loadQuestions()
 }
 
-const handleViewQuestion = async (question) => {
-  try {
-    const res = await getQuestionDetail(question.questionId)
-    if (res.code === 200) {
-      currentQuestion.value = res.data
-      valueHtml.value = ''
-      if (editorRef.value) {
-        editorRef.value.setHtml('')
-      }
-      editingAnswerId.value = null
-      questionDialogVisible.value = true
-      // 如果已经在问答Tab且编辑器已初始化，这里不需要额外操作
-      // 如果是弹窗模式（这里似乎是弹窗），则需要在弹窗打开后初始化
-      // 但 CourseDetail 里的 questionDialogVisible 似乎是用于查看详情的弹窗？
-      // 检查代码发现 CourseDetail 里并没有使用 el-dialog 来包裹 answer-form，
-      // 而是直接显示在页面下方（当 currentQuestion 存在时？）
-      // 不，CourseDetail 里并没有 el-dialog 包裹 answer-form。
-      // 让我们检查一下模板结构。
-      // 模板里似乎没有 el-dialog 包裹 answer-form。
-      // 实际上，CourseDetail.vue 的结构是：
-      // Tab -> Questions List -> (Click View) -> Dialog?
-      // 让我们再读一下 CourseDetail.vue 的模板部分。
-    }
-  } catch (error) {
-    console.error('获取问题详情失败', error)
-  }
+const handleViewQuestion = (question) => {
+  router.push(`/teacher/questions/${question.questionId}`)
 }
 
-const handleEditAnswer = (answer) => {
-  editingAnswerId.value = answer.answerId
-  valueHtml.value = answer.answerContent
-  if (editorRef.value) {
-    editorRef.value.setHtml(answer.answerContent)
-  }
-}
-
-const handleCancelEdit = () => {
-  editingAnswerId.value = null
-  valueHtml.value = ''
-  if (editorRef.value) {
-    editorRef.value.setHtml('')
-  }
-}
-
-const handleDeleteAnswer = async (answerId) => {
-  try {
-    await ElMessageBox.confirm('确定要删除这条回答吗？', '提示', {
-      type: 'warning'
-    })
-    
-    await deleteAnswer(answerId)
-    ElMessage.success('删除成功')
-    
-    // 刷新详情
-    const res = await getQuestionDetail(currentQuestion.value.questionId)
-    if (res.code === 200) {
-      currentQuestion.value = res.data
-    }
-    loadQuestions() // 刷新列表状态
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除失败:', error)
-      ElMessage.error('删除失败')
-    }
-  }
-}
-
-const submitAnswer = async () => {
-  // 确保 valueHtml 是最新的
-  if (editorRef.value) {
-    valueHtml.value = editorRef.value.getHtml()
-  }
-
-  if (editorRef.value && editorRef.value.isEmpty()) {
-    ElMessage.warning('请输入回答内容')
-    return
-  }
-  
-  answerSubmitLoading.value = true
-  try {
-    if (editingAnswerId.value) {
-      // 更新回答
-      const data = {
-        answerContent: valueHtml.value
-      }
-      const res = await updateAnswer(editingAnswerId.value, data)
-      if (res.code === 200) {
-        ElMessage.success('更新成功')
-        editingAnswerId.value = null
-        valueHtml.value = ''
-        if (editorRef.value) {
-          editorRef.value.setHtml('')
-        }
-        
-        // 刷新详情
-        const detailRes = await getQuestionDetail(currentQuestion.value.questionId)
-        if (detailRes.code === 200) {
-          currentQuestion.value = detailRes.data
-        }
-      } else {
-        ElMessage.error(res.message || '更新失败')
-      }
-    } else {
-      // 新增回答
-      const formData = new FormData()
-      formData.append('answerContent', valueHtml.value)
-      
-      await answerQuestion(currentQuestion.value.questionId, formData)
-      ElMessage.success('回答成功')
-      
-      // 刷新详情
-      const res = await getQuestionDetail(currentQuestion.value.questionId)
-      if (res.code === 200) {
-        currentQuestion.value = res.data
-      }
-      valueHtml.value = ''
-      if (editorRef.value) {
-        editorRef.value.setHtml('')
-      }
-      loadQuestions() // 刷新列表状态
-    }
-  } catch (error) {
-    console.error('操作失败', error)
-    ElMessage.error('操作失败')
-  } finally {
-    answerSubmitLoading.value = false
-  }
-}
 const handlePreview = (row) => {
-  if (row.filePath) {
-    window.open(row.filePath, '_blank')
-  } else {
-    ElMessage.warning('文件地址不存在')
-  }
+  router.push(`/teacher/resources/${row.resourceId}`)
 }
 </script>
 

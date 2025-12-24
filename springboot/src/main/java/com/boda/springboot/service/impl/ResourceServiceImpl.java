@@ -367,12 +367,12 @@ public class ResourceServiceImpl implements ResourceService {
             return "VIDEO";
         } else if (contentType.equals("application/pdf")) {
             return "PDF";
-        } else if (contentType.contains("word") || contentType.contains("document")) {
-            return "WORD";
-        } else if (contentType.contains("excel") || contentType.contains("spreadsheet")) {
-            return "EXCEL";
         } else if (contentType.contains("powerpoint") || contentType.contains("presentation")) {
             return "PPT";
+        } else if (contentType.contains("excel") || contentType.contains("spreadsheet") || contentType.contains("sheet")) {
+            return "EXCEL";
+        } else if (contentType.contains("word") || contentType.contains("document")) {
+            return "WORD";
         } else if (contentType.contains("zip") || contentType.contains("rar") || contentType.contains("7z")) {
             return "ZIP";
         } else {

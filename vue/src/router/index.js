@@ -165,10 +165,28 @@ const routes = [
         meta: { title: '资源回收站' }
       },
       {
+        path: 'resources/publish',
+        name: 'TeacherResourcePublish',
+        component: () => import('../views/teacher/ResourcePublish.vue'),
+        meta: { title: '发布资源' }
+      },
+      {
+        path: 'resources/:id',
+        name: 'TeacherResourceDetail',
+        component: () => import('../views/teacher/ResourceDetail.vue'),
+        meta: { title: '资源详情' }
+      },
+      {
         path: 'questions',
         name: 'TeacherQuestions',
         component: () => import('../views/teacher/Questions.vue'),
         meta: { title: '答疑解惑' }
+      },
+      {
+        path: 'questions/:id',
+        name: 'TeacherQuestionDetail',
+        component: () => import('../views/teacher/QuestionDetail.vue'),
+        meta: { title: '问题详情' }
       },
       {
         path: 'notifications',

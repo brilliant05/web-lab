@@ -1,14 +1,17 @@
 package com.boda.springboot.service.impl;
 
+import com.boda.springboot.common.Constant;
 import com.boda.springboot.common.PageResult;
 import com.boda.springboot.dto.ResourcePageQueryDTO;
 import com.boda.springboot.dto.ResourceUpdateDTO;
 import com.boda.springboot.dto.ResourceUploadDTO;
 import com.boda.springboot.entity.Resource;
 import com.boda.springboot.entity.ResourceCollection;
+import com.boda.springboot.entity.StudentCourse;
 import com.boda.springboot.exception.ServiceException;
 import com.boda.springboot.mapper.ResourceCollectionMapper;
 import com.boda.springboot.mapper.ResourceMapper;
+import com.boda.springboot.mapper.StudentCourseMapper;
 import com.boda.springboot.service.ResourceService;
 import com.boda.springboot.utils.FileTypeValidator;
 import com.boda.springboot.utils.QiNiuUtil;
@@ -39,6 +42,9 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Autowired
     private ResourceCollectionMapper collectionMapper;
+
+    @Autowired
+    private StudentCourseMapper studentCourseMapper;
 
     @Autowired
     private QiNiuUtil qiNiuUtil;
@@ -101,7 +107,17 @@ public class ResourceServiceImpl implements ResourceService {
      * 分页查询资源
      */
     @Override
-    public PageResult pageQuery(ResourcePageQueryDTO queryDTO, Long currentUserId) {
+    public PageResult pageQuery(ResourcePageQueryDTO queryDTO, Long currentUserId, String role) {
+        // 如果是学生，且查询指定课程的资源
+        if (Constant.ROLE_STUDENT.equals(role) && queryDTO.getCourseId() != null) {
+            // 检查学生是否加入该课程
+            StudentCourse studentCourse = studentCourseMapper.selectByStudentAndCourse(currentUserId, queryDTO.getCourseId());
+            // 如果未加入课程，只能查看公开资源
+            if (studentCourse == null) {
+                queryDTO.setVisibility(Constant.RESOURCE_PUBLIC);
+            }
+        }
+
         // 启动分页
         PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
         // 查询数据
@@ -122,15 +138,24 @@ public class ResourceServiceImpl implements ResourceService {
      * 获取资源详情
      */
     @Override
-    public ResourceVO getResourceById(Long resourceId, Long currentUserId) {
+    public ResourceVO getResourceById(Long resourceId, Long currentUserId, String role) {
         log.info("查询资源详情 - 资源ID: {}", resourceId);
         // 使用联查获取详情（包含课程名和上传者姓名）
         ResourceVO vo = resourceMapper.selectDetailById(resourceId);
         if (vo == null) {
             throw new ServiceException("资源不存在或已下架");
         }
+
+        // 权限检查：如果是学生，且资源是课程私有，检查是否加入课程
+        if (Constant.ROLE_STUDENT.equals(role) && Constant.RESOURCE_COURSE_ONLY.equals(vo.getVisibility())) {
+            StudentCourse studentCourse = studentCourseMapper.selectByStudentAndCourse(currentUserId, vo.getCourseId());
+            if (studentCourse == null) {
+                throw new ServiceException("无权访问该课程的私有资源");
+            }
+        }
+
         // 增加浏览次数
-        resourceMapper.increaseViewCount(resourceId);
+        resourceMapper.incrementViewCount(resourceId);
         // 查询收藏状态
         if (currentUserId != null) {
             ResourceCollection collection = collectionMapper.selectByUserAndResource(currentUserId, resourceId);
@@ -192,7 +217,7 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public String downloadResource(Long resourceId) {
+    public String downloadResource(Long resourceId, Long currentUserId, String role) {
         log.info("下载资源 - 资源ID: {}", resourceId);
 
         Resource resource = resourceMapper.selectById(resourceId);
@@ -200,8 +225,16 @@ public class ResourceServiceImpl implements ResourceService {
             throw new ServiceException("资源不存在");
         }
 
+        // 权限检查：如果是学生，且资源是课程私有，检查是否加入课程
+        if (Constant.ROLE_STUDENT.equals(role) && Constant.RESOURCE_COURSE_ONLY.equals(resource.getVisibility())) {
+            StudentCourse studentCourse = studentCourseMapper.selectByStudentAndCourse(currentUserId, resource.getCourseId());
+            if (studentCourse == null) {
+                throw new ServiceException("无权下载该课程的私有资源");
+            }
+        }
+
         // 增加下载次数
-        resourceMapper.increaseDownloadCount(resourceId);
+        resourceMapper.incrementDownloadCount(resourceId);
 
         return resource.getFilePath();
     }
@@ -279,6 +312,45 @@ public class ResourceServiceImpl implements ResourceService {
         // 3. 更新置顶状态
         resourceMapper.updateTopStatus(resourceId, isTop);
         log.info("资源置顶设置成功 - 资源ID: {}", resourceId);
+    }
+
+    @Override
+    public PageResult getRecycleBinList(Integer pageNum, Integer pageSize, Long uploaderId) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<ResourceVO> list = resourceMapper.selectRecycleBinList(uploaderId);
+        Page<ResourceVO> page = (Page<ResourceVO>) list;
+        return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    @Override
+    @Transactional
+    public void restoreResource(Long resourceId, Long currentUserId) {
+        Resource resource = resourceMapper.selectAnyById(resourceId);
+        if (resource == null) {
+            throw new ServiceException("资源不存在");
+        }
+        // 简单权限校验：仅上传者可恢复
+        if (!resource.getUploaderId().equals(currentUserId)) {
+             throw new ServiceException("无权操作此资源");
+        }
+        resourceMapper.restoreById(resourceId);
+    }
+
+    @Override
+    @Transactional
+    public void deleteResourcePermanently(Long resourceId, Long currentUserId) {
+        Resource resource = resourceMapper.selectAnyById(resourceId);
+        if (resource == null) {
+            throw new ServiceException("资源不存在");
+        }
+        // 简单权限校验：仅上传者可删除
+        if (!resource.getUploaderId().equals(currentUserId)) {
+             throw new ServiceException("无权操作此资源");
+        }
+        
+        // TODO: 如果需要，在此处调用七牛云工具类删除云端文件
+        
+        resourceMapper.deletePermanentlyById(resourceId);
     }
 
     /**

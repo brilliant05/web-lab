@@ -61,6 +61,8 @@
       :title="currentQuestion?.isAnswered === 1 ? '查看详情' : '回答问题'"
       width="600px"
       @close="resetDialog"
+      @opened="initEditor"
+      @closed="destroyEditor"
     >
       <div v-if="currentQuestion" class="question-detail">
         <div class="detail-item">
@@ -80,32 +82,58 @@
         <el-divider />
         
         <div class="answer-section">
-          <div class="label" style="margin-bottom: 10px;">回答：</div>
-          <div v-if="currentQuestion.isAnswered === 1">
-            <div class="existing-answer">{{ currentAnswer }}</div>
-            <div class="answer-time" v-if="answerTime">回答时间：{{ answerTime }}</div>
+          <div class="label" style="margin-bottom: 10px;">回答列表：</div>
+          
+          <!-- 回答列表 -->
+          <div v-if="currentQuestion.answers && currentQuestion.answers.length > 0" class="answer-list">
+            <div v-for="answer in currentQuestion.answers" :key="answer.answerId" class="answer-item">
+              <div class="answer-header">
+                <span class="teacher-name">{{ answer.teacherName }}</span>
+                <span class="answer-time">{{ answer.createTime }}</span>
+                <div class="answer-actions">
+                  <el-button type="primary" link :icon="Edit" @click="handleEditAnswer(answer)">编辑</el-button>
+                  <el-button type="danger" link :icon="Delete" @click="handleDeleteAnswer(answer.answerId)">删除</el-button>
+                </div>
+              </div>
+              <div class="answer-content" v-html="answer.answerContent"></div>
+              <div v-if="answer.imageUrls" class="answer-images">
+                <el-image 
+                  v-for="(url, index) in answer.imageUrls.split(',')" 
+                  :key="index" 
+                  :src="url" 
+                  :preview-src-list="answer.imageUrls.split(',')"
+                  class="answer-image"
+                />
+              </div>
+            </div>
           </div>
-          <div v-else>
-            <el-input
-              v-model="answerContent"
-              type="textarea"
-              :rows="6"
-              placeholder="请输入您的回答..."
-            />
+          <el-empty v-else description="暂无回答" :image-size="60" />
+
+          <el-divider />
+
+          <!-- 回答输入框 -->
+          <div class="answer-input-area">
+            <div class="label">{{ editingAnswerId ? '修改回答：' : '添加回答：' }}</div>
+            <div style="border: 1px solid #ccc">
+              <div ref="toolbarContainer" style="border-bottom: 1px solid #ccc"></div>
+              <div ref="editorContainer" style="height: 300px; overflow-y: hidden;"></div>
+            </div>
+            <div class="action-buttons" style="margin-top: 10px; text-align: right;">
+              <el-button v-if="editingAnswerId" @click="handleCancelEdit">取消修改</el-button>
+              <el-button 
+                type="primary" 
+                @click="handleSubmitAnswer"
+                :loading="submitLoading"
+              >
+                {{ editingAnswerId ? '保存修改' : '提交回答' }}
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">关闭</el-button>
-          <el-button 
-            v-if="currentQuestion?.isAnswered === 0" 
-            type="primary" 
-            @click="handleSubmitAnswer"
-            :loading="submitLoading"
-          >
-            提交回答
-          </el-button>
         </span>
       </template>
     </el-dialog>
@@ -113,10 +141,12 @@
 </template>
 
 <script setup>
-import { answerQuestion, getQuestionDetail, getQuestionList } from '@/api'
-import { Clock, CollectionTag, Search, User } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
-import { onMounted, reactive, ref } from 'vue'
+import { answerQuestion, deleteAnswer, getQuestionDetail, getQuestionList, updateAnswer } from '@/api'
+import { Clock, CollectionTag, Delete, Edit, Search, User } from '@element-plus/icons-vue'
+import { createEditor, createToolbar } from '@wangeditor/editor'
+import '@wangeditor/editor/dist/css/style.css'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 
 const searchKeyword = ref('')
 const statusFilter = ref(null) // null for all, 0 for unanswered, 1 for answered
@@ -132,10 +162,72 @@ const pagination = reactive({
 // Dialog related
 const dialogVisible = ref(false)
 const currentQuestion = ref(null)
-const answerContent = ref('')
-const currentAnswer = ref('')
-const answerTime = ref('')
 const submitLoading = ref(false)
+const editingAnswerId = ref(null)
+
+// Editor related
+const editorRef = shallowRef()
+const toolbarContainer = shallowRef()
+const editorContainer = shallowRef()
+const valueHtml = ref('')
+const toolbarConfig = {}
+const editorConfig = { 
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      server: 'http://localhost:8080/api/v1/files/upload',
+      fieldName: 'file',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      },
+      customInsert(res, insertFn) {
+        // res 即服务端的返回结果
+        if (res.code === 200) {
+          insertFn(res.data.url, '', '')
+        } else {
+          ElMessage.error(res.msg || '上传图片失败')
+        }
+      }
+    }
+  },
+  onChange(editor) {
+    valueHtml.value = editor.getHtml()
+  }
+}
+
+const initEditor = () => {
+  if (editorRef.value) return 
+  
+  nextTick(() => {
+    if (!editorContainer.value) return
+    
+    const editor = createEditor({
+      selector: editorContainer.value,
+      html: valueHtml.value,
+      config: editorConfig,
+      mode: 'default'
+    })
+    editorRef.value = editor
+
+    const toolbar = createToolbar({
+      editor,
+      selector: toolbarContainer.value,
+      config: toolbarConfig,
+      mode: 'default'
+    })
+  })
+}
+
+const destroyEditor = () => {
+  const editor = editorRef.value
+  if (editor == null) return
+  editor.destroy()
+  editorRef.value = null
+}
+
+onBeforeUnmount(() => {
+  destroyEditor()
+})
 
 const fetchQuestions = async () => {
   loading.value = true
@@ -143,7 +235,7 @@ const fetchQuestions = async () => {
     const params = {
       pageNum: pagination.currentPage,
       pageSize: pagination.pageSize,
-      questionTitle: searchKeyword.value,
+      keyword: searchKeyword.value,
       isAnswered: statusFilter.value
     }
     const res = await getQuestionList(params)
@@ -174,13 +266,6 @@ const handleReply = async (row) => {
     const res = await getQuestionDetail(row.questionId)
     if (res.code === 200) {
       currentQuestion.value = res.data
-      // 如果已回答，填充回答内容
-      if (res.data.isAnswered === 1 && res.data.answerList && res.data.answerList.length > 0) {
-        // 假设取最新的回答
-        const latestAnswer = res.data.answerList[0]
-        currentAnswer.value = latestAnswer.answerContent
-        answerTime.value = latestAnswer.createTime
-      }
       dialogVisible.value = true
     }
   } catch (error) {
@@ -191,33 +276,114 @@ const handleReply = async (row) => {
 
 const resetDialog = () => {
   currentQuestion.value = null
-  answerContent.value = ''
-  currentAnswer.value = ''
-  answerTime.value = ''
+  valueHtml.value = ''
+  editingAnswerId.value = null
+}
+
+const handleEditAnswer = (answer) => {
+  editingAnswerId.value = answer.answerId
+  valueHtml.value = answer.answerContent
+  if (editorRef.value) {
+    editorRef.value.setHtml(answer.answerContent)
+  }
+}
+
+const handleCancelEdit = () => {
+  editingAnswerId.value = null
+  valueHtml.value = ''
+  if (editorRef.value) {
+    editorRef.value.setHtml('')
+  }
+}
+
+const handleDeleteAnswer = async (answerId) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这条回答吗？', '提示', {
+      type: 'warning'
+    })
+    
+    await deleteAnswer(answerId)
+    ElMessage.success('删除成功')
+    
+    // 刷新详情
+    const res = await getQuestionDetail(currentQuestion.value.questionId)
+    if (res.code === 200) {
+      currentQuestion.value = res.data
+      // 如果没有回答了，刷新列表状态
+      if (!res.data.answers || res.data.answers.length === 0) {
+        fetchQuestions()
+      }
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 const handleSubmitAnswer = async () => {
-  if (!answerContent.value.trim()) {
+  // 确保 valueHtml 是最新的
+  if (editorRef.value) {
+    valueHtml.value = editorRef.value.getHtml()
+  }
+  
+  if (editorRef.value && editorRef.value.isEmpty()) {
     ElMessage.warning('请输入回答内容')
     return
   }
   
   submitLoading.value = true
   try {
-    const data = {
-      content: answerContent.value
-    }
-    const res = await answerQuestion(currentQuestion.value.questionId, data)
-    if (res.code === 200) {
-      ElMessage.success('回答成功')
-      dialogVisible.value = false
-      fetchQuestions()
+    if (editingAnswerId.value) {
+      // 更新回答
+      const data = {
+        answerContent: valueHtml.value
+      }
+      const res = await updateAnswer(editingAnswerId.value, data)
+      if (res.code === 200) {
+        ElMessage.success('更新成功')
+        editingAnswerId.value = null
+        valueHtml.value = ''
+        if (editorRef.value) {
+          editorRef.value.setHtml('')
+        }
+        
+        // 刷新详情
+        const detailRes = await getQuestionDetail(currentQuestion.value.questionId)
+        if (detailRes.code === 200) {
+          currentQuestion.value = detailRes.data
+        }
+      } else {
+        ElMessage.error(res.message || '更新失败')
+      }
     } else {
-      ElMessage.error(res.message || '回答失败')
+      // 新增回答
+      const formData = new FormData()
+      formData.append('answerContent', valueHtml.value)
+      // 富文本模式下，图片已嵌入HTML，不再需要单独的images参数
+      
+      const res = await answerQuestion(currentQuestion.value.questionId, formData)
+      if (res.code === 200) {
+        ElMessage.success('回答成功')
+        valueHtml.value = ''
+        if (editorRef.value) {
+          editorRef.value.setHtml('')
+        }
+        
+        // 刷新详情
+        const detailRes = await getQuestionDetail(currentQuestion.value.questionId)
+        if (detailRes.code === 200) {
+          currentQuestion.value = detailRes.data
+        }
+        fetchQuestions() // 刷新列表状态
+      } else {
+        ElMessage.error(res.message || '回答失败')
+      }
     }
   } catch (error) {
-    console.error('回答失败:', error)
-    ElMessage.error('回答失败')
+    console.error('操作失败:', error)
+    ElMessage.error('操作失败')
   } finally {
     submitLoading.value = false
   }
@@ -315,10 +481,57 @@ onMounted(() => {
   border: 1px solid var(--el-color-success-light-8);
 }
 
+.answer-list {
+  margin-bottom: 20px;
+}
+
+.answer-item {
+  background-color: #f5f7fa;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.teacher-name {
+  font-weight: bold;
+  color: #409eff;
+}
+
 .answer-time {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  text-align: right;
+  color: #909399;
+  margin-left: 10px;
+  flex: 1;
+}
+
+.answer-content {
+  color: #303133;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.answer-images {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.answer-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.upload-area {
+  margin-top: 10px;
 }
 </style>

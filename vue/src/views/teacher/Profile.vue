@@ -80,7 +80,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 
 const activeTab = ref('info')
 
-const uploadUrl = 'http://localhost:8080/api/v1/upload/avatar'
+const uploadUrl = 'http://localhost:8080/api/v1/files/avatar'
 const uploadHeaders = computed(() => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`
 }))

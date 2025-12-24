@@ -100,8 +100,9 @@
               </el-table-column>
               <el-table-column prop="downloadCount" label="下载" width="80" align="center" />
               <el-table-column prop="createTime" label="上传时间" width="180" />
-              <el-table-column label="操作" width="200" fixed="right">
+              <el-table-column label="操作" width="220" fixed="right">
                 <template #default="{ row }">
+                  <el-button link type="primary" size="small" @click="handlePreview(row)">预览</el-button>
                   <el-button link type="primary" size="small" @click="handleEditResource(row)">编辑</el-button>
                   <el-button link type="danger" size="small" @click="handleDeleteResource(row)">删除</el-button>
                 </template>
@@ -219,6 +220,8 @@
       title="问题详情"
       width="700px"
       destroy-on-close
+      @opened="initEditor"
+      @closed="destroyEditor"
     >
       <div class="question-detail" v-if="currentQuestion">
         <div class="detail-header">
@@ -242,22 +245,36 @@
             <div class="answer-meta">
               <span class="teacher-name">{{ answer.teacherName }}</span>
               <span class="answer-time">{{ answer.createTime }}</span>
+              <div class="answer-actions">
+                <el-button type="primary" link :icon="Edit" @click="handleEditAnswer(answer)">编辑</el-button>
+                <el-button type="danger" link :icon="Delete" @click="handleDeleteAnswer(answer.answerId)">删除</el-button>
+              </div>
             </div>
-            <div class="answer-content">{{ answer.answerContent }}</div>
+            <div class="answer-content" v-html="answer.answerContent"></div>
+            <div v-if="answer.imageUrls" class="answer-images">
+              <el-image 
+                v-for="(url, index) in answer.imageUrls.split(',')" 
+                :key="index" 
+                :src="url" 
+                :preview-src-list="answer.imageUrls.split(',')"
+                class="answer-image"
+              />
+            </div>
           </div>
         </div>
         <div v-else class="no-answer">暂无回答</div>
 
         <div class="answer-form" style="margin-top: 20px;">
-          <h4>撰写回答</h4>
-          <el-input
-            v-model="answerForm.content"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入您的回答..."
-          />
+          <h4>{{ editingAnswerId ? '修改回答' : '撰写回答' }}</h4>
+          <div style="border: 1px solid #ccc">
+            <div ref="toolbarContainer" style="border-bottom: 1px solid #ccc"></div>
+            <div ref="editorContainer" style="height: 300px; overflow-y: hidden;"></div>
+          </div>
           <div style="margin-top: 10px; text-align: right;">
-            <el-button type="primary" @click="submitAnswer" :loading="answerSubmitLoading">提交回答</el-button>
+            <el-button v-if="editingAnswerId" @click="handleCancelEdit">取消修改</el-button>
+            <el-button type="primary" @click="submitAnswer" :loading="answerSubmitLoading">
+              {{ editingAnswerId ? '保存修改' : '提交回答' }}
+            </el-button>
           </div>
         </div>
       </div>
@@ -267,20 +284,24 @@
 
 <script setup>
 import {
-    answerQuestion,
-    deleteResource,
-    getCourseById,
-    getCourseStudents,
-    getQuestionDetail,
-    getQuestionList,
-    getResourceList,
-    updateResource,
-    uploadResource
+  answerQuestion,
+  deleteAnswer,
+  deleteResource,
+  getCourseById,
+  getCourseStudents,
+  getQuestionDetail,
+  getQuestionList,
+  getResourceList,
+  updateAnswer,
+  updateResource,
+  uploadResource
 } from '@/api'
 import CourseCover from '@/components/CourseCover.vue'
-import { Clock, Refresh, Search, Upload, UploadFilled, User, View } from '@element-plus/icons-vue'
+import { Clock, Delete, Edit, Refresh, Search, Upload, UploadFilled, User, View } from '@element-plus/icons-vue'
+import { createEditor, createToolbar } from '@wangeditor/editor'
+import '@wangeditor/editor/dist/css/style.css'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
@@ -344,10 +365,71 @@ const questionPagination = reactive({
 })
 const questionDialogVisible = ref(false)
 const currentQuestion = ref(null)
-const answerForm = reactive({
-  content: ''
-})
 const answerSubmitLoading = ref(false)
+const editingAnswerId = ref(null)
+
+// Editor related
+const editorRef = shallowRef()
+const toolbarContainer = shallowRef()
+const editorContainer = shallowRef()
+const valueHtml = ref('')
+const toolbarConfig = {}
+const editorConfig = { 
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      server: 'http://localhost:8080/api/v1/files/upload',
+      fieldName: 'file',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      },
+      customInsert(res, insertFn) {
+        if (res.code === 200) {
+          insertFn(res.data.url, '', '')
+        } else {
+          ElMessage.error(res.msg || '上传图片失败')
+        }
+      }
+    }
+  },
+  onChange(editor) {
+    valueHtml.value = editor.getHtml()
+  }
+}
+
+const initEditor = () => {
+  if (editorRef.value) return 
+  
+  nextTick(() => {
+    if (!editorContainer.value) return
+    
+    const editor = createEditor({
+      selector: editorContainer.value,
+      html: valueHtml.value,
+      config: editorConfig,
+      mode: 'default'
+    })
+    editorRef.value = editor
+
+    const toolbar = createToolbar({
+      editor,
+      selector: toolbarContainer.value,
+      config: toolbarConfig,
+      mode: 'default'
+    })
+  })
+}
+
+const destroyEditor = () => {
+  const editor = editorRef.value
+  if (editor == null) return
+  editor.destroy()
+  editorRef.value = null
+}
+
+onBeforeUnmount(() => {
+  destroyEditor()
+})
 
 // 初始化
 onMounted(async () => {
@@ -565,43 +647,136 @@ const handleViewQuestion = async (question) => {
     const res = await getQuestionDetail(question.questionId)
     if (res.code === 200) {
       currentQuestion.value = res.data
-      answerForm.content = ''
+      valueHtml.value = ''
+      if (editorRef.value) {
+        editorRef.value.setHtml('')
+      }
+      editingAnswerId.value = null
       questionDialogVisible.value = true
+      // 如果已经在问答Tab且编辑器已初始化，这里不需要额外操作
+      // 如果是弹窗模式（这里似乎是弹窗），则需要在弹窗打开后初始化
+      // 但 CourseDetail 里的 questionDialogVisible 似乎是用于查看详情的弹窗？
+      // 检查代码发现 CourseDetail 里并没有使用 el-dialog 来包裹 answer-form，
+      // 而是直接显示在页面下方（当 currentQuestion 存在时？）
+      // 不，CourseDetail 里并没有 el-dialog 包裹 answer-form。
+      // 让我们检查一下模板结构。
+      // 模板里似乎没有 el-dialog 包裹 answer-form。
+      // 实际上，CourseDetail.vue 的结构是：
+      // Tab -> Questions List -> (Click View) -> Dialog?
+      // 让我们再读一下 CourseDetail.vue 的模板部分。
     }
   } catch (error) {
     console.error('获取问题详情失败', error)
   }
 }
 
-const submitAnswer = async () => {
-  if (!answerForm.content.trim()) {
-    ElMessage.warning('请输入回答内容')
-    return
+const handleEditAnswer = (answer) => {
+  editingAnswerId.value = answer.answerId
+  valueHtml.value = answer.answerContent
+  if (editorRef.value) {
+    editorRef.value.setHtml(answer.answerContent)
   }
-  
-  answerSubmitLoading.value = true
+}
+
+const handleCancelEdit = () => {
+  editingAnswerId.value = null
+  valueHtml.value = ''
+  if (editorRef.value) {
+    editorRef.value.setHtml('')
+  }
+}
+
+const handleDeleteAnswer = async (answerId) => {
   try {
-    const formData = new FormData()
-    formData.append('answerContent', answerForm.content)
+    await ElMessageBox.confirm('确定要删除这条回答吗？', '提示', {
+      type: 'warning'
+    })
     
-    await answerQuestion(currentQuestion.value.questionId, formData)
-    ElMessage.success('回答成功')
+    await deleteAnswer(answerId)
+    ElMessage.success('删除成功')
     
     // 刷新详情
     const res = await getQuestionDetail(currentQuestion.value.questionId)
     if (res.code === 200) {
       currentQuestion.value = res.data
     }
-    answerForm.content = ''
     loadQuestions() // 刷新列表状态
   } catch (error) {
-    console.error('回答失败', error)
-    ElMessage.error('回答失败')
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+const submitAnswer = async () => {
+  // 确保 valueHtml 是最新的
+  if (editorRef.value) {
+    valueHtml.value = editorRef.value.getHtml()
+  }
+
+  if (editorRef.value && editorRef.value.isEmpty()) {
+    ElMessage.warning('请输入回答内容')
+    return
+  }
+  
+  answerSubmitLoading.value = true
+  try {
+    if (editingAnswerId.value) {
+      // 更新回答
+      const data = {
+        answerContent: valueHtml.value
+      }
+      const res = await updateAnswer(editingAnswerId.value, data)
+      if (res.code === 200) {
+        ElMessage.success('更新成功')
+        editingAnswerId.value = null
+        valueHtml.value = ''
+        if (editorRef.value) {
+          editorRef.value.setHtml('')
+        }
+        
+        // 刷新详情
+        const detailRes = await getQuestionDetail(currentQuestion.value.questionId)
+        if (detailRes.code === 200) {
+          currentQuestion.value = detailRes.data
+        }
+      } else {
+        ElMessage.error(res.message || '更新失败')
+      }
+    } else {
+      // 新增回答
+      const formData = new FormData()
+      formData.append('answerContent', valueHtml.value)
+      
+      await answerQuestion(currentQuestion.value.questionId, formData)
+      ElMessage.success('回答成功')
+      
+      // 刷新详情
+      const res = await getQuestionDetail(currentQuestion.value.questionId)
+      if (res.code === 200) {
+        currentQuestion.value = res.data
+      }
+      valueHtml.value = ''
+      if (editorRef.value) {
+        editorRef.value.setHtml('')
+      }
+      loadQuestions() // 刷新列表状态
+    }
+  } catch (error) {
+    console.error('操作失败', error)
+    ElMessage.error('操作失败')
   } finally {
     answerSubmitLoading.value = false
   }
 }
-
+const handlePreview = (row) => {
+  if (row.filePath) {
+    window.open(row.filePath, '_blank')
+  } else {
+    ElMessage.warning('文件地址不存在')
+  }
+}
 </script>
 
 <style scoped>
@@ -800,5 +975,28 @@ const submitAnswer = async () => {
   text-align: center;
   color: #909399;
   padding: 20px;
+}
+
+.answer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.answer-images {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.answer-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.upload-area {
+  margin-top: 10px;
 }
 </style>

@@ -130,7 +130,8 @@ onMounted(() => {
   padding: 15px;
   border-bottom: 1px solid var(--el-border-color-lighter);
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  border-left: 4px solid transparent;
 }
 
 .notification-item:hover {
@@ -139,6 +140,12 @@ onMounted(() => {
 
 .notification-item.unread {
   background-color: var(--el-color-primary-light-9);
+  border-left-color: var(--el-color-primary);
+}
+
+.notification-item.unread .item-title {
+  font-weight: bold;
+  color: var(--el-text-color-primary);
 }
 
 .item-icon {

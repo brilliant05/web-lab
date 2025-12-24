@@ -22,6 +22,7 @@
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
       </div>
       <div class="operation-right">
+        <el-button type="warning" :icon="Delete" @click="handleOpenRecycleBin">回收站</el-button>
         <el-button type="primary" :icon="Upload" @click="handleUpload">发布资源</el-button>
       </div>
     </div>
@@ -53,8 +54,9 @@
       </el-table-column>
       <el-table-column prop="downloadCount" label="下载量" width="100" align="center" />
       <el-table-column prop="createTime" label="发布时间" width="180" />
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
+          <el-button link type="primary" size="small" @click="handlePreview(row)">预览</el-button>
           <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
           <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
         </template>
@@ -131,10 +133,12 @@
 
 <script setup>
 import { deleteResource, getMyCourses, getMyUploads, updateResource, uploadResource } from '@/api'
-import { Search, Upload, UploadFilled } from '@element-plus/icons-vue'
+import { Delete, Search, Upload, UploadFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const searchKeyword = ref('')
 const courseFilter = ref('')
 const loading = ref(false)
@@ -203,6 +207,26 @@ const fetchResources = async () => {
   }
 }
 
+// 获取回收站资源
+const fetchRecycleBin = async () => {
+  recycleBinLoading.value = true
+  try {
+    const params = {
+      pageNum: recycleBinPagination.currentPage,
+      pageSize: recycleBinPagination.pageSize
+    }
+    const res = await getRecycleBinList(params)
+    if (res.code === 200) {
+      recycleBinData.value = res.data.records
+      recycleBinPagination.total = res.data.total
+    }
+  } catch (error) {
+    ElMessage.error('获取回收站列表失败')
+  } finally {
+    recycleBinLoading.value = false
+  }
+}
+
 const handleSearch = () => {
   pagination.currentPage = 1
   fetchResources()
@@ -213,9 +237,21 @@ const handlePageChange = (val) => {
   fetchResources()
 }
 
+const handleOpenRecycleBin = () => {
+  router.push('/teacher/resources/recycle-bin')
+}
+
 const handleUpload = () => {
   formType.value = 'add'
   dialogVisible.value = true
+}
+
+const handlePreview = (row) => {
+  if (row.filePath) {
+    window.open(row.filePath, '_blank')
+  } else {
+    ElMessage.warning('文件地址不存在')
+  }
 }
 
 const handleEdit = (row) => {

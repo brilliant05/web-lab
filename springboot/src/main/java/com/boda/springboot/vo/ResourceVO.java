@@ -107,6 +107,12 @@ public class ResourceVO implements Serializable {
     private LocalDateTime createTime;
 
     /**
+     * 更新时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime updateTime;
+
+    /**
      * 是否已收藏（当前用户）
      */
     private Boolean isCollected;

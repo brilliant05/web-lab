@@ -41,8 +41,27 @@ public class ResourceController {
         log.info("接收到资源列表查询请求 - 查询条件: {}", queryDTO);
 
         Long currentUserId = (Long) request.getAttribute("userId");
-        PageResult pageResult = resourceService.pageQuery(queryDTO, currentUserId);
+        String role = (String) request.getAttribute("role");
+        PageResult pageResult = resourceService.pageQuery(queryDTO, currentUserId, role);
 
+        return Result.success(pageResult);
+    }
+
+    /**
+     * 获取回收站列表
+     * GET /resources/recycle-bin
+     */
+    @GetMapping("/recycle-bin")
+    public Result<PageResult> getRecycleBinList(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            HttpServletRequest request) {
+        
+        log.info("接收到查询回收站列表请求 - 页码: {}, 每页数量: {}", pageNum, pageSize);
+        
+        Long uploaderId = (Long) request.getAttribute("userId");
+        PageResult pageResult = resourceService.getRecycleBinList(pageNum, pageSize, uploaderId);
+        
         return Result.success(pageResult);
     }
 
@@ -57,7 +76,8 @@ public class ResourceController {
         log.info("接收到资源详情查询请求 - 资源ID: {}", resourceId);
 
         Long currentUserId = (Long) request.getAttribute("userId");
-        ResourceVO resource = resourceService.getResourceById(resourceId, currentUserId);
+        String role = (String) request.getAttribute("role");
+        ResourceVO resource = resourceService.getResourceById(resourceId, currentUserId, role);
 
         return Result.success(resource);
     }
@@ -163,10 +183,12 @@ public class ResourceController {
      * 权限：所有登录用户
      */
     @GetMapping("/{resourceId}/download")
-    public Result<Map<String, String>> downloadResource(@PathVariable Long resourceId) {
+    public Result<Map<String, String>> downloadResource(@PathVariable Long resourceId, HttpServletRequest request) {
         log.info("接收到资源下载请求 - 资源ID: {}", resourceId);
 
-        String fileUrl = resourceService.downloadResource(resourceId);
+        Long currentUserId = (Long) request.getAttribute("userId");
+        String role = (String) request.getAttribute("role");
+        String fileUrl = resourceService.downloadResource(resourceId, currentUserId, role);
 
         Map<String, String> result = new HashMap<>();
         result.put("url", fileUrl);
@@ -272,6 +294,36 @@ public class ResourceController {
         resourceService.topResource(resourceId, isTop, currentUserId);
 
         return Result.success("操作成功");
+    }
+
+
+
+    /**
+     * 恢复资源
+     * PUT /resources/{resourceId}/restore
+     */
+    @PutMapping("/{resourceId}/restore")
+    public Result<Void> restoreResource(@PathVariable Long resourceId, HttpServletRequest request) {
+        log.info("接收到资源恢复请求 - 资源ID: {}", resourceId);
+        
+        Long currentUserId = (Long) request.getAttribute("userId");
+        resourceService.restoreResource(resourceId, currentUserId);
+        
+        return Result.success("资源恢复成功");
+    }
+
+    /**
+     * 永久删除资源
+     * DELETE /resources/{resourceId}/permanent
+     */
+    @DeleteMapping("/{resourceId}/permanent")
+    public Result<Void> deleteResourcePermanently(@PathVariable Long resourceId, HttpServletRequest request) {
+        log.info("接收到资源永久删除请求 - 资源ID: {}", resourceId);
+        
+        Long currentUserId = (Long) request.getAttribute("userId");
+        resourceService.deleteResourcePermanently(resourceId, currentUserId);
+        
+        return Result.success("资源永久删除成功");
     }
 }
 

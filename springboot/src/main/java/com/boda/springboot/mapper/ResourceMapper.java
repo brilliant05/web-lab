@@ -36,6 +36,11 @@ public interface ResourceMapper {
     Resource selectById(Long resourceId);
 
     /**
+     * 根据ID查询（包含已删除）
+     */
+    Resource selectAnyById(Long resourceId);
+
+    /**
      * 分页查询资源列表（带关联信息）
      */
     List<ResourceVO> selectPageList(ResourcePageQueryDTO queryDTO);
@@ -48,12 +53,14 @@ public interface ResourceMapper {
     /**
      * 增加下载次数
      */
-    void increaseDownloadCount(Long resourceId);
+    @Select("UPDATE resource SET download_count = download_count + 1 WHERE resource_id = #{resourceId}")
+    void incrementDownloadCount(Long resourceId);
 
     /**
      * 增加浏览次数
      */
-    void increaseViewCount(Long resourceId);
+    @Select("UPDATE resource SET view_count = view_count + 1 WHERE resource_id = #{resourceId}")
+    void incrementViewCount(Long resourceId);
 
     /**
      * 更新置顶状态
@@ -71,4 +78,19 @@ public interface ResourceMapper {
      */
     @Select("SELECT COUNT(*) FROM resource WHERE is_deleted = 0 AND status = 1")
     Integer countResources();
+
+    /**
+     * 查询回收站资源
+     */
+    List<ResourceVO> selectRecycleBinList(@Param("uploaderId") Long uploaderId);
+
+    /**
+     * 恢复资源
+     */
+    void restoreById(Long resourceId);
+
+    /**
+     * 永久删除资源
+     */
+    void deletePermanentlyById(Long resourceId);
 }

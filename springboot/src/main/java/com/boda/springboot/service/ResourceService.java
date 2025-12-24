@@ -21,12 +21,12 @@ public interface ResourceService {
     /**
      * 分页查询资源列表
      */
-    PageResult pageQuery(ResourcePageQueryDTO queryDTO, Long currentUserId);
+    PageResult pageQuery(ResourcePageQueryDTO queryDTO, Long currentUserId, String role);
 
     /**
      * 获取资源详情
      */
-    ResourceVO getResourceById(Long resourceId, Long currentUserId);
+    ResourceVO getResourceById(Long resourceId, Long currentUserId, String role);
 
     /**
      * 更新资源信息
@@ -41,7 +41,7 @@ public interface ResourceService {
     /**
      * 下载资源（增加下载次数并返回文件URL）
      */
-    String downloadResource(Long resourceId);
+    String downloadResource(Long resourceId, Long currentUserId, String role);
 
     /**
      * 收藏资源
@@ -64,8 +64,23 @@ public interface ResourceService {
     PageResult getMyUploads(Integer pageNum, Integer pageSize, Long uploaderId);
 
     /**
-     * 置顶资源（仅教师）
+     * 置顶资源
      */
     void topResource(Long resourceId, Integer isTop, Long currentUserId);
+
+    /**
+     * 获取回收站资源列表
+     */
+    PageResult getRecycleBinList(Integer pageNum, Integer pageSize, Long uploaderId);
+
+    /**
+     * 恢复资源
+     */
+    void restoreResource(Long resourceId, Long currentUserId);
+
+    /**
+     * 永久删除资源
+     */
+    void deleteResourcePermanently(Long resourceId, Long currentUserId);
 }
 

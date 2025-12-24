@@ -159,6 +159,12 @@ const routes = [
         meta: { title: '资源管理' }
       },
       {
+        path: 'resources/recycle-bin',
+        name: 'TeacherResourceRecycleBin',
+        component: () => import('../views/teacher/ResourceRecycleBin.vue'),
+        meta: { title: '资源回收站' }
+      },
+      {
         path: 'questions',
         name: 'TeacherQuestions',
         component: () => import('../views/teacher/Questions.vue'),

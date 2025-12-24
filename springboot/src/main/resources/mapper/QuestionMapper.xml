@@ -88,6 +88,8 @@
                 q.question_title LIKE CONCAT('%', #{keyword}, '%')
                 OR q.question_content LIKE CONCAT('%', #{keyword}, '%')
                 OR q.tags LIKE CONCAT('%', #{keyword}, '%')
+                OR c.course_name LIKE CONCAT('%', #{keyword}, '%')
+                OR s.real_name LIKE CONCAT('%', #{keyword}, '%')
             )
         </if>
         ORDER BY q.create_time DESC

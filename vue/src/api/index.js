@@ -118,10 +118,10 @@ export const unlikeAnswer = (answerId) =>
   http.delete(`/answers/${answerId}/like`)
 
 export const updateAnswer = (answerId, data) =>
-  http.put(`/answers/${answerId}`, data)
+  http.put(`/questions/answers/${answerId}`, data)
 
 export const deleteAnswer = (answerId) =>
-  http.delete(`/answers/${answerId}`)
+  http.delete(`/questions/answers/${answerId}`)
 
 export const getPendingQuestions = (params = {}) =>
   http.get('/questions/pending', { params })
@@ -180,4 +180,14 @@ export const getCourseTeachers = (courseId) =>
 
 export const getTeacherCourses = (teacherId) =>
   http.get(`/admin/teachers/${teacherId}/courses`)
+
+// 资源回收站接口
+export const getRecycleBinList = (params = {}) =>
+  http.get('/resources/recycle-bin', { params })
+
+export const restoreResource = (resourceId) =>
+  http.put(`/resources/${resourceId}/restore`)
+
+export const deleteResourcePermanently = (resourceId) =>
+  http.delete(`/resources/${resourceId}/permanent`)
 

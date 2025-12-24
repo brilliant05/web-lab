@@ -370,32 +370,32 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { fixImageUrl } from '@/utils/image'
 import {
-  Edit,
-  UserFilled,
-  Search,
-  Plus,
-  Check
-} from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  getCurrentUser,
-  updateUserProfile,
-  updatePassword,
-  uploadAvatar,
-  getMyUploads,
-  getMyQuestions,
-  getNotificationList,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-  updateResource,
-  deleteResource
+    deleteResource,
+    getCurrentUser,
+    getMyQuestions,
+    getMyUploads,
+    getNotificationList,
+    markAllNotificationRead,
+    markNotificationRead,
+    updatePassword,
+    updateResource,
+    updateUserProfile,
+    uploadAvatar
 } from '@/api'
 import MyResourceCard from '@/components/student/MyResourceCard.vue'
 import QuestionCard from '@/components/student/QuestionCard.vue'
+import { fixImageUrl } from '@/utils/image'
+import {
+    Check,
+    Edit,
+    Plus,
+    Search,
+    UserFilled
+} from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
@@ -888,7 +888,7 @@ const loadNotifications = async () => {
 // 标记已读
 const handleMarkRead = async (notificationId) => {
   try {
-    const response = await markNotificationAsRead(notificationId)
+    const response = await markNotificationRead(notificationId)
     if (response && response.code === 200) {
       ElMessage.success('已标记为已读')
       // 更新本地状态
@@ -909,7 +909,7 @@ const handleMarkRead = async (notificationId) => {
 const handleMarkAllRead = async () => {
   markingAllRead.value = true
   try {
-    const response = await markAllNotificationsAsRead()
+    const response = await markAllNotificationRead()
     if (response && response.code === 200) {
       ElMessage.success('全部标记为已读')
       await loadNotifications()

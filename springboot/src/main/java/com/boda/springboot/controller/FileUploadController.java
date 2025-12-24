@@ -24,6 +24,18 @@ public class FileUploadController {
     @Autowired
     private QiNiuUtil qiNiuUtil;
 
+    @PostMapping("/upload")
+    public Result<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
+        try {
+            String url = qiNiuUtil.uploadFile(file);
+            Map<String, String> map = new HashMap<>();
+            map.put("url", url);
+            return Result.success(map);
+        } catch (IOException e) {
+            log.error("文件上传失败", e);
+            return Result.error("文件上传失败");
+        }
+    }
     /**
      * 上传单个文件
      *

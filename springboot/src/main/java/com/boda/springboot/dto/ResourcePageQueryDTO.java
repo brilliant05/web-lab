@@ -28,6 +28,11 @@ public class ResourcePageQueryDTO implements Serializable {
     private Long courseId;
 
     /**
+     * 可见性（筛选条件）
+     */
+    private String visibility;
+
+    /**
      * 关键词（搜索标题、描述）
      */
     private String keyword;

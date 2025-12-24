@@ -61,7 +61,7 @@ public interface ResourceService {
     /**
      * 查询我上传的资源
      */
-    PageResult getMyUploads(Integer pageNum, Integer pageSize, Long uploaderId);
+    PageResult getMyUploads(Integer pageNum, Integer pageSize, Long uploaderId, String resourceTitle, Long courseId);
 
     /**
      * 置顶资源

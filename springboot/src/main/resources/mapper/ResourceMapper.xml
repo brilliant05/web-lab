@@ -158,6 +158,12 @@
         LEFT JOIN course c ON r.course_id = c.course_id
         LEFT JOIN user u ON r.uploader_id = u.user_id
         WHERE r.is_deleted = 0 AND r.uploader_id = #{uploaderId}
+        <if test="resourceTitle != null and resourceTitle != ''">
+            AND r.resource_title LIKE CONCAT('%', #{resourceTitle}, '%')
+        </if>
+        <if test="courseId != null">
+            AND r.course_id = #{courseId}
+        </if>
         ORDER BY r.create_time DESC
     </select>
 

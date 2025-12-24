@@ -256,12 +256,14 @@ public class ResourceController {
     public Result<PageResult> getMyUploads(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String resourceTitle,
+            @RequestParam(required = false) Long courseId,
             HttpServletRequest request) {
 
-        log.info("接收到查询我上传的资源请求 - 页码: {}, 每页数量: {}", pageNum, pageSize);
+        log.info("接收到查询我上传的资源请求 - 页码: {}, 每页数量: {}, 标题: {}, 课程ID: {}", pageNum, pageSize, resourceTitle, courseId);
 
         Long uploaderId = (Long) request.getAttribute("userId");
-        PageResult pageResult = resourceService.getMyUploads(pageNum, pageSize, uploaderId);
+        PageResult pageResult = resourceService.getMyUploads(pageNum, pageSize, uploaderId, resourceTitle, courseId);
 
         return Result.success(pageResult);
     }

@@ -48,7 +48,9 @@ public interface ResourceMapper {
     /**
      * 查询我上传的资源
      */
-    List<ResourceVO> selectMyUploads(@Param("uploaderId") Long uploaderId);
+    List<ResourceVO> selectMyUploads(@Param("uploaderId") Long uploaderId, 
+                                   @Param("resourceTitle") String resourceTitle, 
+                                   @Param("courseId") Long courseId);
 
     /**
      * 增加下载次数

@@ -287,11 +287,11 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public PageResult getMyUploads(Integer pageNum, Integer pageSize, Long uploaderId) {
-        log.info("查询我上传的资源 - 上传者ID: {}", uploaderId);
+    public PageResult getMyUploads(Integer pageNum, Integer pageSize, Long uploaderId, String resourceTitle, Long courseId) {
+        log.info("查询我上传的资源 - 上传者ID: {}, 标题: {}, 课程ID: {}", uploaderId, resourceTitle, courseId);
 
         PageHelper.startPage(pageNum, pageSize);
-        Page<ResourceVO> page = (Page<ResourceVO>) resourceMapper.selectMyUploads(uploaderId);
+        Page<ResourceVO> page = (Page<ResourceVO>) resourceMapper.selectMyUploads(uploaderId, resourceTitle, courseId);
 
         return new PageResult(page.getTotal(), page.getResult());
     }

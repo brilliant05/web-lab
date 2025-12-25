@@ -36,5 +36,15 @@ public class TeacherCourse implements Serializable {
      * 分配时间
      */
     private LocalDateTime assignTime;
+
+    /**
+     * 邀请码
+     */
+    private String inviteCode;
+
+    /**
+     * 邀请码过期时间
+     */
+    private LocalDateTime inviteCodeExpireTime;
 }
 

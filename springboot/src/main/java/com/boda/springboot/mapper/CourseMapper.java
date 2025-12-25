@@ -55,7 +55,7 @@ public interface CourseMapper {
      * @param inviteCode 邀请码
      * @return 课程信息
      */
-    @Select("SELECT * FROM  teacher_course WHERE invite_code = #{inviteCode} ")
+    @Select("SELECT c.* FROM course c JOIN teacher_course tc ON c.course_id = tc.course_id WHERE tc.invite_code = #{inviteCode} AND c.is_deleted = 0")
     Course selectByInviteCode(String inviteCode);
 
     /**

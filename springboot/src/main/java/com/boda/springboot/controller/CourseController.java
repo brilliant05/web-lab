@@ -76,10 +76,17 @@ public class CourseController {
      * @return 课程信息
      */
     @GetMapping("/{courseId}")
-    public Result<Course> getCourseById(@PathVariable Long courseId) {
+    public Result<Course> getCourseById(@PathVariable Long courseId, HttpServletRequest request) {
         log.info("接收到根据ID查询课程请求: {}", courseId);
         // 调用 Service 层获取课程信息
         Course course = courseService.getCourseById(courseId);
+
+        // 如果是教师，尝试获取邀请码
+        String role = (String) request.getAttribute("role");
+        Long userId = (Long) request.getAttribute("userId");
+        if (Constant.ROLE_TEACHER.equals(role)) {
+            courseService.enrichCourseWithInviteCode(course, userId);
+        }
 
         return Result.success(course);
     }
@@ -169,6 +176,27 @@ public class CourseController {
         PageResult pageResult = courseService.getMyCourses(teacherId, pageNum, pageSize);
 
         return Result.success(pageResult);
+    }
+
+    /**
+     * 更新课程邀请码（教师）
+     * PUT /courses/{courseId}/invite-code
+     * Body: {"inviteCode": "ABC123"}
+     */
+    @PutMapping("/{courseId}/invite-code")
+    @RequireRole(Constant.ROLE_TEACHER)
+    public Result updateInviteCode(
+            @PathVariable Long courseId,
+            @RequestBody Map<String, String> params,
+            HttpServletRequest request) {
+        
+        String inviteCode = params.get("inviteCode");
+        log.info("接收到更新邀请码请求 - 课程ID: {}, 邀请码: {}", courseId, inviteCode);
+
+        Long teacherId = (Long) request.getAttribute("userId");
+        courseService.updateInviteCode(teacherId, courseId, inviteCode);
+
+        return Result.success("邀请码更新成功!");
     }
 
     /**

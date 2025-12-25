@@ -66,6 +66,21 @@ public interface CourseService {
     PageResult getMyCourses(Long teacherId, Integer pageNum, Integer pageSize);
 
     /**
+     * 更新课程邀请码
+     * @param teacherId 教师ID
+     * @param courseId 课程ID
+     * @param inviteCode 邀请码
+     */
+    void updateInviteCode(Long teacherId, Long courseId, String inviteCode);
+
+    /**
+     * 填充课程邀请码（如果是该课程的教师）
+     * @param course 课程对象
+     * @param teacherId 教师ID
+     */
+    void enrichCourseWithInviteCode(Course course, Long teacherId);
+
+    /**
      * 学生加入课程（通过邀请码）
      * @param studentId 学生ID
      * @param inviteCode 邀请码

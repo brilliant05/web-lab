@@ -31,8 +31,28 @@
         </el-select>
         <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
         <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+        <el-button type="success" :icon="Plus" @click="handleJoinByCode">邀请码加入</el-button>
       </div>
     </el-card>
+
+    <!-- 邀请码加入对话框 -->
+    <el-dialog
+      v-model="joinDialogVisible"
+      title="通过邀请码加入课程"
+      width="400px"
+    >
+      <el-form :model="joinForm" label-width="80px">
+        <el-form-item label="邀请码">
+          <el-input v-model="joinForm.code" placeholder="请输入教师提供的邀请码" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="joinDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitJoinCode" :loading="joining">加入</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 课程卡片网格 -->
     <div class="courses-container">
@@ -71,13 +91,46 @@
 <script setup>
 import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Search, Refresh } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getCourseList, getStudentCourses } from '@/api'
+import { getCourseList, getStudentCourses, joinCourse } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 import CourseCard from '@/components/student/CourseCard.vue'
 
 const route = useRoute()
+
+// 邀请码加入
+const joinDialogVisible = ref(false)
+const joining = ref(false)
+const joinForm = reactive({
+  code: ''
+})
+
+const handleJoinByCode = () => {
+  joinForm.code = ''
+  joinDialogVisible.value = true
+}
+
+const submitJoinCode = async () => {
+  if (!joinForm.code || !joinForm.code.trim()) {
+    ElMessage.warning('请输入邀请码')
+    return
+  }
+  
+  joining.value = true
+  try {
+    await joinCourse(joinForm.code.trim())
+    ElMessage.success('加入课程成功')
+    joinDialogVisible.value = false
+    // 刷新列表
+    loadStudentCourses()
+    loadCourses()
+  } catch (error) {
+    console.error('加入课程失败:', error)
+  } finally {
+    joining.value = false
+  }
+}
 
 // 搜索表单
 const searchForm = reactive({

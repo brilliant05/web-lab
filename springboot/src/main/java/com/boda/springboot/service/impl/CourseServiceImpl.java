@@ -212,6 +212,53 @@ public class CourseServiceImpl implements CourseService {
     }
 
     /**
+     * 更新课程邀请码
+     * @param teacherId 教师ID
+     * @param courseId 课程ID
+     * @param inviteCode 邀请码
+     */
+    @Override
+    public void updateInviteCode(Long teacherId, Long courseId, String inviteCode) {
+        // 1. 检查教师是否教授该课程
+        TeacherCourse teacherCourse = teacherCourseMapper.selectByTeacherAndCourse(teacherId, courseId);
+        if (teacherCourse == null) {
+            throw new ServiceException("403", "您不是该课程的教师");
+        }
+
+        // 2. 检查邀请码是否唯一（如果不为空）
+        if (inviteCode != null && !inviteCode.trim().isEmpty()) {
+            // 格式校验：6-20位纯数字
+            if (!inviteCode.matches("^\\d{6,20}$")) {
+                throw new ServiceException("400", "邀请码必须为6到20位的纯数字组合");
+            }
+
+            TeacherCourse exist = teacherCourseMapper.selectByInviteCode(inviteCode);
+            if (exist != null && !exist.getId().equals(teacherCourse.getId())) {
+                throw new ServiceException("400", "邀请码已被使用，请更换");
+            }
+        }
+
+        // 3. 更新邀请码
+        teacherCourseMapper.updateInviteCode(teacherId, courseId, inviteCode);
+    }
+
+    /**
+     * 填充课程邀请码（如果是该课程的教师）
+     * @param course 课程对象
+     * @param teacherId 教师ID
+     */
+    @Override
+    public void enrichCourseWithInviteCode(Course course, Long teacherId) {
+        if (course == null || teacherId == null) {
+            return;
+        }
+        TeacherCourse teacherCourse = teacherCourseMapper.selectByTeacherAndCourse(teacherId, course.getCourseId());
+        if (teacherCourse != null) {
+            course.setInviteCode(teacherCourse.getInviteCode());
+        }
+    }
+
+    /**
      * 学生加入课程（通过邀请码）
      * @param studentId 学生ID
      * @param inviteCode 邀请码
@@ -221,13 +268,17 @@ public class CourseServiceImpl implements CourseService {
     public void joinCourse(Long studentId, String inviteCode) {
         log.info("学生加入课程 - 学生ID: {}, 邀请码: {}", studentId, inviteCode);
 
-        // 1. 根据邀请码查询课程
-        Course course = courseMapper.selectByInviteCode(inviteCode);
-        if (course == null) {
-            throw new ServiceException("404", "邀请码无效或课程不存在");
+        // 1. 根据邀请码查询教师课程关联信息
+        TeacherCourse teacherCourse = teacherCourseMapper.selectByInviteCode(inviteCode);
+        if (teacherCourse == null) {
+            throw new ServiceException("404", "邀请码无效");
         }
 
-        // 2. 检查课程状态
+        // 2. 获取课程信息并检查状态
+        Course course = courseMapper.selectById(teacherCourse.getCourseId());
+        if (course == null) {
+            throw new ServiceException("404", "课程不存在");
+        }
         if (course.getStatus() == 0) {
             throw new ServiceException("400", "该课程已关闭，无法加入");
         }
@@ -242,6 +293,8 @@ public class CourseServiceImpl implements CourseService {
         StudentCourse studentCourse = new StudentCourse();
         studentCourse.setStudentId(studentId);
         studentCourse.setCourseId(course.getCourseId());
+        studentCourse.setTeacherId(teacherCourse.getTeacherId());
+        studentCourse.setJoinMethod("INVITE_CODE");
         studentCourseMapper.save(studentCourse);
 
         log.info("学生加入课程成功 - 课程: {}", course.getCourseName());

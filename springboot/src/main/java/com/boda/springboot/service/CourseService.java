@@ -4,6 +4,7 @@ import com.boda.springboot.common.PageResult;
 import com.boda.springboot.dto.CoursePageQueryDTO;
 import com.boda.springboot.entity.Course;
 import com.boda.springboot.entity.User;
+import com.boda.springboot.vo.CourseVO;
 
 import java.util.List;
 
@@ -106,7 +107,7 @@ public interface CourseService {
      * @param teacherId 教师ID
      * @return 课程列表
      */
-    List<Course> getTeacherCourses(Long teacherId);
+    List<CourseVO> getTeacherCourses(Long teacherId);
 
     /**
      * 获取学生的课程列表

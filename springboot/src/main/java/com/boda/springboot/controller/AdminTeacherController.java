@@ -7,6 +7,7 @@ import com.boda.springboot.common.Result;
 import com.boda.springboot.dto.TeacherPageQueryDTO;
 import com.boda.springboot.entity.User;
 import com.boda.springboot.service.AdminTeacherService;
+import com.boda.springboot.vo.CourseVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -122,7 +123,7 @@ public class AdminTeacherController {
      */
     @GetMapping("/{teacherId}/courses")
     @RequireRole("ADMIN")
-    public Result<java.util.List<com.boda.springboot.entity.Course>> getTeacherCourses(@PathVariable Long teacherId) {
+    public Result<List<CourseVO>> getTeacherCourses(@PathVariable Long teacherId) {
         log.info("查询教师课程列表 - 教师ID: {}", teacherId);
         return Result.success(courseService.getTeacherCourses(teacherId));
     }

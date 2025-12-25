@@ -3,6 +3,7 @@ package com.boda.springboot.mapper;
 import com.boda.springboot.dto.CoursePageQueryDTO;
 import com.boda.springboot.entity.Course;
 import com.boda.springboot.entity.User;
+import com.boda.springboot.vo.CourseVO;
 import com.github.pagehelper.Page;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -63,7 +64,7 @@ public interface CourseMapper {
      * @param teacherId 教师ID
      * @return 课程列表
      */
-    List<Course> selectByTeacherId(Long teacherId);
+    List<CourseVO> selectByTeacherId(Long teacherId);
 
     /**
      * 删除课程（逻辑删除）

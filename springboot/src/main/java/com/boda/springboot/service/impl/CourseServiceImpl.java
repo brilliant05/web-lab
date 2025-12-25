@@ -11,6 +11,7 @@ import com.boda.springboot.mapper.CourseMapper;
 import com.boda.springboot.mapper.StudentCourseMapper;
 import com.boda.springboot.mapper.TeacherCourseMapper;
 import com.boda.springboot.service.CourseService;
+import com.boda.springboot.vo.CourseVO;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -206,7 +207,7 @@ public class CourseServiceImpl implements CourseService {
         log.info("查询教师课程列表 - 教师ID: {}", teacherId);
 
         PageHelper.startPage(pageNum, pageSize);
-        Page<Course> page = (Page<Course>) courseMapper.selectByTeacherId(teacherId);
+        Page<CourseVO> page = (Page<CourseVO>) courseMapper.selectByTeacherId(teacherId);
 
         return new PageResult(page.getTotal(), page.getResult());
     }
@@ -326,7 +327,7 @@ public class CourseServiceImpl implements CourseService {
      * @return 课程列表
      */
     @Override
-    public List<Course> getTeacherCourses(Long teacherId) {
+    public List<CourseVO> getTeacherCourses(Long teacherId) {
         return courseMapper.selectByTeacherId(teacherId);
     }
 

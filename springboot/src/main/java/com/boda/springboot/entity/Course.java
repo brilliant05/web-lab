@@ -77,4 +77,9 @@ public class Course implements Serializable {
      * 逻辑删除: 0-未删除, 1-已删除
      */
     private Integer isDeleted;
+
+    /**
+     * 授课教师姓名（非数据库字段，用于展示）
+     */
+    private String teacherName;
 }

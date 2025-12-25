@@ -36,29 +36,33 @@
     <!-- 分页查询课程列表 -->
     <select id="pageQuery" resultType="com.boda.springboot.entity.Course">
         SELECT
-            course_id,
-            course_name,
-            course_code,
-            description,
-            college,
-            cover_image,
-            status,
-            create_time
-        FROM course
-        WHERE is_deleted = 0
+            c.course_id,
+            c.course_name,
+            c.course_code,
+            c.description,
+            c.college,
+            c.cover_image,
+            c.status,
+            c.create_time,
+            GROUP_CONCAT(u.real_name SEPARATOR ', ') as teacherName
+        FROM course c
+        LEFT JOIN teacher_course tc ON c.course_id = tc.course_id
+        LEFT JOIN user u ON tc.teacher_id = u.user_id
+        WHERE c.is_deleted = 0
         <if test="status != null">
-            AND status = #{status}
+            AND c.status = #{status}
         </if>
         <if test="courseName != null and courseName != ''">
-            AND course_name LIKE CONCAT('%', #{courseName}, '%')
+            AND c.course_name LIKE CONCAT('%', #{courseName}, '%')
         </if>
         <if test="courseCode != null and courseCode != ''">
-            AND course_code LIKE CONCAT('%', #{courseCode}, '%')
+            AND c.course_code LIKE CONCAT('%', #{courseCode}, '%')
         </if>
         <if test="college != null and college != ''">
-            AND college LIKE CONCAT('%', #{college}, '%')
+            AND c.college LIKE CONCAT('%', #{college}, '%')
         </if>
-        ORDER BY create_time DESC
+        GROUP BY c.course_id
+        ORDER BY c.create_time DESC
     </select>
 
     <!-- 动态更新课程信息 -->
@@ -78,7 +82,7 @@
     </update>
 
     <!-- 查询教师的课程列表 -->
-    <select id="selectByTeacherId" resultType="com.boda.springboot.entity.Course">
+    <select id="selectByTeacherId" resultType="com.boda.springboot.vo.CourseVO">
         SELECT
             c.course_id,
             c.course_name,
@@ -88,7 +92,8 @@
             c.cover_image,
             tc.invite_code,
             c.status,
-            c.create_time
+            c.create_time,
+            (SELECT COUNT(*) FROM student_course sc WHERE sc.course_id = c.course_id) as studentCount
         FROM course c
         INNER JOIN teacher_course tc ON c.course_id = tc.course_id
         WHERE tc.teacher_id = #{teacherId}
@@ -165,9 +170,11 @@
             c.college,
             c.cover_image,
             c.status,
-            c.create_time
+            c.create_time,
+            u.real_name as teacherName
         FROM course c
         INNER JOIN student_course sc ON c.course_id = sc.course_id
+        LEFT JOIN user u ON sc.teacher_id = u.user_id
         WHERE sc.student_id = #{studentId}
           AND c.is_deleted = 0
         ORDER BY sc.create_time DESC

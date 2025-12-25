@@ -113,7 +113,7 @@
         <el-form-item label="用户名" prop="username">
           <el-input 
             v-model="formData.username" 
-            placeholder="请输入用户名" 
+            placeholder="请输入用户名(3-20个字符)" 
             :disabled="formType === 'edit'"
             :prefix-icon="User"
           />
@@ -256,16 +256,16 @@
 
 <script setup>
 import {
-    ArrowDown, Delete, Edit,
-    Iphone,
-    List,
-    Medal,
-    Message,
-    Plus, Refresh,
-    School,
-    Search,
-    User,
-    View
+  ArrowDown, Delete, Edit,
+  Iphone,
+  List,
+  Medal,
+  Message,
+  Plus, Refresh,
+  School,
+  Search,
+  User,
+  View
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, onMounted, reactive, ref } from 'vue'

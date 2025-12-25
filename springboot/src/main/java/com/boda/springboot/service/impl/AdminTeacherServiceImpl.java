@@ -31,6 +31,12 @@ public class AdminTeacherServiceImpl implements AdminTeacherService {
         if(userMapper.selectByUsername(teacher.getUsername()) != null){
             throw new RuntimeException("用户名已存在");
         }
+        if(teacher.getEmail() == null || teacher.getEmail().trim().isEmpty()){
+            teacher.setEmail(null);
+        }
+        if(teacher.getPhone() == null || teacher.getPhone().trim().isEmpty()){
+            teacher.setPhone(null);
+        }
         teacher.setRole(Constant.ROLE_TEACHER);
         teacher.setPassword(passwordEncoder.encode(Constant.DEFAULT_PASSWORD));
         userMapper.save(teacher);

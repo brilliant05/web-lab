@@ -92,4 +92,11 @@ public interface CourseService {
      * @return 课程列表
      */
     List<Course> getTeacherCourses(Long teacherId);
+
+    /**
+     * 获取学生的课程列表
+     * @param studentId 学生ID
+     * @return 课程列表
+     */
+    List<Course> getStudentCourses(Long studentId);
 }

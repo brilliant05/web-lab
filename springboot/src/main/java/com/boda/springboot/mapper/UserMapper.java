@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.List;
+
 @Mapper
 public interface UserMapper {
     /**
@@ -79,5 +81,12 @@ public interface UserMapper {
      */
     @Select("SELECT COUNT(*) FROM user WHERE role = 'TEACHER' AND is_deleted = 0")
     Integer countTeachers();
+
+    /**
+     * 查询所有用户的ID（用于批量发送通知）
+     * @return 用户ID列表
+     */
+    @Select("SELECT user_id FROM user WHERE is_deleted = 0 AND status = 1")
+    List<Long> selectAllUserIds();
 
 }

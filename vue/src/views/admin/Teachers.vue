@@ -179,6 +179,27 @@
             :prefix-icon="Iphone"
           />
         </el-form-item>
+
+        <el-form-item label="分配课程">
+          <el-select
+            v-model="formData.courseIds"
+            placeholder="请选择课程（可选，可多选）"
+            multiple
+            filterable
+            style="width: 100%"
+            :loading="coursesLoading"
+          >
+            <el-option
+              v-for="course in courseList"
+              :key="course.courseId"
+              :label="`${course.courseName} (${course.courseCode})`"
+              :value="course.courseId"
+            />
+          </el-select>
+          <div style="font-size: 12px; color: #909399; margin-top: 4px">
+            可选择多个课程，留空表示暂不分配课程
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -249,7 +270,7 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, onMounted, reactive, ref } from 'vue'
 
-import { addTeacher, deleteTeacher, getTeacherCourses, getTeacherList, updateTeacher, updateTeacherStatus } from '@/api'
+import { addTeacher, deleteTeacher, getTeacherCourses, getTeacherList, updateTeacher, updateTeacherStatus, getCourseList } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 
 const collegeList = COLLEGE_LIST
@@ -281,8 +302,28 @@ const formData = reactive({
   jobTitle: '',
   college: '',
   email: '',
-  phone: ''
+  phone: '',
+  courseIds: [] // 课程ID列表
 })
+
+// 课程列表
+const courseList = ref([])
+const coursesLoading = ref(false)
+
+// 加载课程列表
+const loadCourseList = async () => {
+  coursesLoading.value = true
+  try {
+    const response = await getCourseList({ pageNum: 1, pageSize: 1000, status: 1 }) // 获取所有开放的课程
+    if (response && response.code === 200 && response.data) {
+      courseList.value = response.data.records || []
+    }
+  } catch (error) {
+    console.error('加载课程列表失败:', error)
+  } finally {
+    coursesLoading.value = false
+  }
+}
 
 const rules = {
   username: [
@@ -332,8 +373,15 @@ const handleAdd = () => {
   dialogVisible.value = true
   nextTick(() => {
     formRef.value?.resetFields()
-    Object.keys(formData).forEach(key => formData[key] = '')
+    Object.keys(formData).forEach(key => {
+      if (key === 'courseIds') {
+        formData[key] = []
+      } else {
+        formData[key] = ''
+      }
+    })
   })
+  loadCourseList() // 加载课程列表
 }
 
 const handleBatchDelete = () => {
@@ -407,7 +455,13 @@ const handleSubmit = async () => {
       submitLoading.value = true
       try {
         if (formType.value === 'add') {
-          await addTeacher(formData)
+          // 构建请求数据，包含courseIds
+          const payload = { ...formData }
+          // 如果没有选择课程，不传courseIds字段
+          if (!payload.courseIds || payload.courseIds.length === 0) {
+            delete payload.courseIds
+          }
+          await addTeacher(payload)
           ElMessage.success('新增成功')
         } else {
           // 更新时使用 id 或 userId

@@ -2,6 +2,7 @@ package com.boda.springboot.mapper;
 
 import com.boda.springboot.dto.ResourcePageQueryDTO;
 import com.boda.springboot.entity.Resource;
+import com.boda.springboot.vo.HotResourceVO;
 import com.boda.springboot.vo.ResourceVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -95,4 +96,9 @@ public interface ResourceMapper {
      * 永久删除资源
      */
     void deletePermanentlyById(Long resourceId);
+
+    /**
+     * 查询热门资源（按下载次数、浏览次数排序）
+     */
+    List<HotResourceVO> selectHotResources(@Param("limit") Integer limit);
 }

@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.boda.springboot.common.Constant;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -130,16 +132,52 @@ public class NotificationServiceImpl implements NotificationService {
     public void createSystemNotification(Long userId, String title, String content) {
         log.info("创建系统通知 - 用户ID: {}, 标题: {}", userId, title);
 
-        Notification notification = new Notification();
-        notification.setUserId(userId);
-        notification.setNotificationType(Constant.NOTIFICATION_TYPE_SYSTEM);
-        notification.setTitle(title);
-        notification.setContent(content);
+        // 如果 userId 为 null，表示向全体用户发送通知
+        if (userId == null) {
+            // 查询所有正常状态的用户ID
+            List<Long> userIds = userMapper.selectAllUserIds();
+            log.info("向全体用户发送系统通知，共 {} 个用户", userIds.size());
 
-        notificationMapper.save(notification);
+            if (userIds.isEmpty()) {
+                log.warn("没有找到任何用户，无法发送通知");
+                return;
+            }
 
-        // 🚀 通过 WebSocket 实时推送通知给在线用户
-        pushNotificationViaWebSocket(userId, notification);
+            // 为每个用户创建通知
+            List<Notification> notifications = new ArrayList<>();
+            for (Long uid : userIds) {
+                Notification notification = new Notification();
+                notification.setUserId(uid);
+                notification.setNotificationType(Constant.NOTIFICATION_TYPE_SYSTEM);
+                notification.setTitle(title);
+                notification.setContent(content);
+                notifications.add(notification);
+            }
+
+            // 批量插入通知
+            if (!notifications.isEmpty()) {
+                notificationMapper.batchInsert(notifications);
+                log.info("批量创建系统通知成功，共 {} 条", notifications.size());
+
+                // 通过 WebSocket 实时推送通知给所有在线用户
+                Notification templateNotification = notifications.get(0);
+                for (Long uid : userIds) {
+                    pushNotificationViaWebSocket(uid, templateNotification);
+                }
+            }
+        } else {
+            // 向指定用户发送通知
+            Notification notification = new Notification();
+            notification.setUserId(userId);
+            notification.setNotificationType(Constant.NOTIFICATION_TYPE_SYSTEM);
+            notification.setTitle(title);
+            notification.setContent(content);
+
+            notificationMapper.save(notification);
+
+            // 🚀 通过 WebSocket 实时推送通知给在线用户
+            pushNotificationViaWebSocket(userId, notification);
+        }
     }
 
     @Override

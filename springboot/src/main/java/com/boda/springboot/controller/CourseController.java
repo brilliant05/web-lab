@@ -215,4 +215,17 @@ public class CourseController {
         List<User> teachers = courseService.getCourseTeachers(courseId);
         return Result.success(teachers);
     }
+
+    /**
+     * 获取学生的课程列表（学生）
+     * GET /courses/my-enrolled
+     */
+    @GetMapping("/my-enrolled")
+    @RequireRole(Constant.ROLE_STUDENT)
+    public Result<List<Course>> getStudentCourses(HttpServletRequest request) {
+        log.info("接收到查询学生已加入课程列表请求");
+        Long studentId = (Long) request.getAttribute("userId");
+        List<Course> courses = courseService.getStudentCourses(studentId);
+        return Result.success(courses);
+    }
 }

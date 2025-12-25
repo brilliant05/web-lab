@@ -13,11 +13,11 @@
             password,
             role
             <if test="realName != null">, real_name</if>
-            <if test="email != null">, email</if>
-            <if test="phone != null">, phone</if>
+            <if test="email != null and email != ''">, email</if>
+            <if test="phone != null and phone != ''">, phone</if>
             <if test="avatarUrl != null">, avatar_url</if>
             <if test="status != null">, status</if>
-            <if test="studentId != null">, student_id</if>
+            <if test="studentId != null and studentId != ''">, student_id</if>
             <if test="college != null">, college</if>
             <if test="jobTitle != null">, job_title</if>
             <if test="profile != null">, profile</if>
@@ -30,11 +30,11 @@
             #{password},
             #{role}
             <if test="realName != null">, #{realName}</if>
-            <if test="email != null">, #{email}</if>
-            <if test="phone != null">, #{phone}</if>
+            <if test="email != null and email != ''">, #{email}</if>
+            <if test="phone != null and phone != ''">, #{phone}</if>
             <if test="avatarUrl != null">, #{avatarUrl}</if>
             <if test="status != null">, #{status}</if>
-            <if test="studentId != null">, #{studentId}</if>
+            <if test="studentId != null and studentId != ''">, #{studentId}</if>
             <if test="college != null">, #{college}</if>
             <if test="jobTitle != null">, #{jobTitle}</if>
             <if test="profile != null">, #{profile}</if>

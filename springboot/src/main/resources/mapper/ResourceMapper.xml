@@ -89,8 +89,28 @@
         LEFT JOIN course c ON r.course_id = c.course_id
         LEFT JOIN user u ON r.uploader_id = u.user_id
         WHERE r.is_deleted = 0 AND r.status = 1
-        <if test="courseId != null">
+        <if test="courseId != null and courseId != -1">
             AND r.course_id = #{courseId}
+        </if>
+        <if test="courseId != null and courseId == -1">
+            AND r.course_id IS NULL
+        </if>
+        <!-- 如果没有指定courseId，使用enrolledCourseIds过滤（仅对学生有效） -->
+        <if test="courseId == null and enrolledCourseIds != null">
+            <choose>
+                <when test="enrolledCourseIds.size() > 0">
+                    AND (
+                        r.course_id IS NULL
+                        OR r.course_id IN
+                        <foreach collection="enrolledCourseIds" item="cid" open="(" separator="," close=")">
+                            #{cid}
+                        </foreach>
+                    )
+                </when>
+                <otherwise>
+                    AND r.course_id IS NULL AND r.visibility = 'PUBLIC'
+                </otherwise>
+            </choose>
         </if>
         <if test="visibility != null and visibility != ''">
             AND r.visibility = #{visibility}
@@ -217,6 +237,23 @@
         WHERE r.resource_id = #{resourceId}
           AND r.is_deleted = 0
           AND r.status = 1
+    </select>
+
+    <!-- 热门资源：按下载次数、浏览次数排序 -->
+    <select id="selectHotResources" resultType="com.boda.springboot.vo.HotResourceVO">
+        SELECT
+            r.resource_id AS resourceId,
+            r.resource_title AS resourceTitle,
+            r.file_type AS fileType,
+            r.download_count AS downloadCount,
+            r.view_count AS viewCount,
+            c.course_name AS courseName
+        FROM resource r
+        LEFT JOIN course c ON r.course_id = c.course_id
+        WHERE r.is_deleted = 0
+          AND r.status = 1
+        ORDER BY r.download_count DESC, r.view_count DESC, r.create_time DESC
+        LIMIT #{limit}
     </select>
 
 </mapper>

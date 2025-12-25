@@ -3,8 +3,12 @@ package com.boda.springboot.service.impl;
 import com.boda.springboot.common.Constant;
 import com.boda.springboot.common.PageResult;
 import com.boda.springboot.dto.TeacherPageQueryDTO;
+import com.boda.springboot.entity.Course;
+import com.boda.springboot.entity.TeacherCourse;
 import com.boda.springboot.entity.User;
 import com.boda.springboot.mapper.AdminTeacherMapper;
+import com.boda.springboot.mapper.CourseMapper;
+import com.boda.springboot.mapper.TeacherCourseMapper;
 import com.boda.springboot.mapper.UserMapper;
 import com.boda.springboot.service.AdminTeacherService;
 import com.github.pagehelper.Page;
@@ -12,8 +16,13 @@ import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Component
+@Slf4j
 public class AdminTeacherServiceImpl implements AdminTeacherService {
 
     @Autowired
@@ -22,12 +31,19 @@ public class AdminTeacherServiceImpl implements AdminTeacherService {
     AdminTeacherMapper adminTeacherMapper;
     @Autowired
     UserMapper userMapper;
+    @Autowired
+    private TeacherCourseMapper teacherCourseMapper;
+    @Autowired
+    private CourseMapper courseMapper;
+    
     /**
-     * 保存教师信息
+     * 保存教师信息（包含课程分配）
      *
      * @param teacher 教师信息
+     * @param courseIds 要分配的课程ID列表
      */
-    public void saveTeacher(User teacher) {
+    @Transactional
+    public void saveTeacher(User teacher, List<Long> courseIds) {
         if(userMapper.selectByUsername(teacher.getUsername()) != null){
             throw new RuntimeException("用户名已存在");
         }
@@ -40,6 +56,34 @@ public class AdminTeacherServiceImpl implements AdminTeacherService {
         teacher.setRole(Constant.ROLE_TEACHER);
         teacher.setPassword(passwordEncoder.encode(Constant.DEFAULT_PASSWORD));
         userMapper.save(teacher);
+        
+        // 分配课程
+        if (courseIds != null && !courseIds.isEmpty()) {
+            Long teacherId = teacher.getUserId();
+            for (Long courseId : courseIds) {
+                // 检查课程是否存在
+                Course course = courseMapper.selectById(courseId);
+                if (course == null) {
+                    log.warn("课程不存在，跳过分配 - 课程ID: {}", courseId);
+                    continue;
+                }
+                
+                // 检查是否已存在关联
+                TeacherCourse existRelation = teacherCourseMapper.selectByTeacherAndCourse(teacherId, courseId);
+                if (existRelation != null) {
+                    log.warn("教师已被分配到此课程，跳过 - 教师ID: {}, 课程ID: {}", teacherId, courseId);
+                    continue;
+                }
+                
+                // 创建教师课程关联
+                TeacherCourse teacherCourse = new TeacherCourse();
+                teacherCourse.setTeacherId(teacherId);
+                teacherCourse.setCourseId(courseId);
+                teacherCourseMapper.save(teacherCourse);
+                
+                log.info("教师课程分配成功 - 教师ID: {}, 课程ID: {}", teacherId, courseId);
+            }
+        }
     }
 
     /**

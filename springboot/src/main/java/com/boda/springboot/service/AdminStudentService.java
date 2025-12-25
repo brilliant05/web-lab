@@ -4,13 +4,16 @@ import com.boda.springboot.common.PageResult;
 import com.boda.springboot.dto.StudentPageQueryDTO;
 import com.boda.springboot.entity.User; // 复用User实体，代表学生（role='STUDENT'）
 
+import java.util.List;
+
 public interface AdminStudentService {
 
     /**
      * 新增学生（复用 User 表，role='STUDENT'）
      * @param student 学生信息
+     * @param courseIds 要分配的课程ID列表（可选）
      */
-    void saveStudent(User student);
+    void saveStudent(User student, List<Long> courseIds);
 
     /**
      * 分页查询学生   筛选user表中role='STUDENT'的记录

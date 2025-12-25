@@ -44,6 +44,12 @@ export const deleteStudent = (studentId) =>
 export const getStatisticsOverview = () =>
   http.get('/admin/statistics/overview')
 
+export const getHotCourses = (params = {}) =>
+  http.get('/admin/statistics/hot-courses', { params })
+
+export const getHotResources = (params = {}) =>
+  http.get('/admin/statistics/hot-resources', { params })
+
 // 课程管理接口
 export const getCourseList = (params = {}) =>
   http.get('/courses', { params })
@@ -142,6 +148,11 @@ export const markNotificationRead = (notificationId) =>
 export const markAllNotificationRead = () =>
   http.put('/notifications/read-all')
 
+// 管理员创建系统通知（userId 为空时表示全体用户）
+export const createSystemNotification = (data) =>
+  http.post('/notifications/system', data)
+
+// 预留删除单条通知接口（当前后端尚未实现）
 export const deleteNotification = (notificationId) =>
   http.delete(`/notifications/${notificationId}`)
 
@@ -180,6 +191,14 @@ export const getCourseTeachers = (courseId) =>
 
 export const getTeacherCourses = (teacherId) =>
   http.get(`/admin/teachers/${teacherId}/courses`)
+
+// 学生加入课程
+export const joinCourse = (inviteCode) =>
+  http.post('/courses/join', { inviteCode })
+
+// 获取学生已加入的课程列表
+export const getStudentCourses = () =>
+  http.get('/courses/my-enrolled')
 
 // 资源回收站接口
 export const getRecycleBinList = (params = {}) =>

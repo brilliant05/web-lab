@@ -124,7 +124,7 @@
 
           <!-- 回答内容 -->
           <div class="answer-content">
-            <div class="answer-text">{{ answer.answerContent }}</div>
+            <div class="answer-text" v-html="answer.answerContent"></div>
             <!-- 回答图片 -->
             <div class="answer-images" v-if="getAnswerImages(answer).length > 0">
               <el-image

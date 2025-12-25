@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -108,13 +109,24 @@ public class ResourceServiceImpl implements ResourceService {
      */
     @Override
     public PageResult pageQuery(ResourcePageQueryDTO queryDTO, Long currentUserId, String role) {
-        // 如果是学生，且查询指定课程的资源
-        if (Constant.ROLE_STUDENT.equals(role) && queryDTO.getCourseId() != null) {
-            // 检查学生是否加入该课程
-            StudentCourse studentCourse = studentCourseMapper.selectByStudentAndCourse(currentUserId, queryDTO.getCourseId());
-            // 如果未加入课程，只能查看公开资源
-            if (studentCourse == null) {
-                queryDTO.setVisibility(Constant.RESOURCE_PUBLIC);
+        // 如果是学生
+        if (Constant.ROLE_STUDENT.equals(role)) {
+            // 如果查询指定课程的资源
+            if (queryDTO.getCourseId() != null) {
+                // 检查学生是否加入该课程
+                StudentCourse studentCourse = studentCourseMapper.selectByStudentAndCourse(currentUserId, queryDTO.getCourseId());
+                // 如果未加入课程，直接返回空结果（该课程的所有资源都不可见）
+                if (studentCourse == null) {
+                    log.info("学生未加入课程，返回空结果 - 学生ID: {}, 课程ID: {}", currentUserId, queryDTO.getCourseId());
+                    return new PageResult(0L, new ArrayList<>());
+                }
+            } else {
+                // 查询所有资源时，只返回：
+                // 1. course_id为NULL的PUBLIC资源（无课程归属的公开资源）
+                // 2. 学生已加入的课程的资源（PUBLIC和COURSE_ONLY都可以）
+                List<Long> enrolledCourseIds = studentCourseMapper.selectCourseIdsByStudentId(currentUserId);
+                // 设置允许的课程ID列表（在SQL中使用IN查询或IS NULL）
+                queryDTO.setEnrolledCourseIds(enrolledCourseIds != null && !enrolledCourseIds.isEmpty() ? enrolledCourseIds : new ArrayList<>());
             }
         }
 

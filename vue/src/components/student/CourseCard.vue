@@ -1,5 +1,10 @@
 <template>
-  <el-card class="course-card" shadow="hover" @click="handleClick">
+  <el-card 
+    class="course-card" 
+    :class="{ 'has-joined': isJoined }"
+    shadow="hover" 
+    @click="handleCardClick"
+  >
     <!-- 封面图片 -->
     <div class="course-cover">
       <img
@@ -28,31 +33,130 @@
         </span>
       </div>
       <div class="course-action">
-        <el-button type="primary" size="small" @click.stop="handleEnterResources">
+        <el-button
+          v-if="isJoined"
+          type="primary"
+          size="small"
+          @click.stop="handleEnterResources"
+        >
           进入资源
+        </el-button>
+        <el-button
+          v-else
+          type="primary"
+          size="small"
+          @click.stop="handleJoinCourse"
+        >
+          加入课程
         </el-button>
       </div>
     </div>
+
+    <!-- 加入课程对话框 -->
+    <el-dialog
+      v-model="joinDialogVisible"
+      title="加入课程"
+      width="400px"
+      @close="resetJoinForm"
+    >
+      <el-form :model="joinForm" label-width="100px">
+        <el-form-item label="课程名称">
+          <el-input :value="course.courseName" disabled />
+        </el-form-item>
+        <el-form-item label="邀请码" required>
+          <el-input
+            v-model="joinForm.inviteCode"
+            placeholder="请输入课程邀请码"
+            maxlength="20"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="joinDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="joinLoading" @click="handleConfirmJoin">
+            确定
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </el-card>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { Reading, OfficeBuilding, UserFilled } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { joinCourse } from '@/api'
 
 const props = defineProps({
   course: {
     type: Object,
     required: true,
     default: () => ({})
+  },
+  isJoined: {
+    type: Boolean,
+    default: false
   }
 })
 
+const emit = defineEmits(['join-success'])
+
 const router = useRouter()
 
-// 点击卡片
-const handleClick = () => {
-  handleEnterResources()
+// 加入课程对话框
+const joinDialogVisible = ref(false)
+const joinLoading = ref(false)
+const joinForm = ref({
+  inviteCode: ''
+})
+
+// 点击卡片（仅已加入课程时可点击进入资源）
+const handleCardClick = () => {
+  if (props.isJoined) {
+    handleEnterResources()
+  }
+  // 未加入课程时点击卡片不做任何操作
+}
+
+// 打开加入课程对话框
+const handleJoinCourse = () => {
+  joinDialogVisible.value = true
+}
+
+// 重置加入表单
+const resetJoinForm = () => {
+  joinForm.value.inviteCode = ''
+}
+
+// 确认加入课程
+const handleConfirmJoin = async () => {
+  if (!joinForm.value.inviteCode || !joinForm.value.inviteCode.trim()) {
+    ElMessage.warning('请输入邀请码')
+    return
+  }
+
+  joinLoading.value = true
+  try {
+    const response = await joinCourse(joinForm.value.inviteCode.trim())
+    if (response && response.code === 200) {
+      ElMessage.success('加入课程成功！')
+      joinDialogVisible.value = false
+      resetJoinForm()
+      // 触发父组件刷新
+      emit('join-success')
+    } else {
+      ElMessage.error(response?.message || '加入课程失败')
+    }
+  } catch (error) {
+    console.error('加入课程失败:', error)
+    ElMessage.error(error?.response?.data?.message || '加入课程失败，请检查邀请码是否正确')
+  } finally {
+    joinLoading.value = false
+  }
 }
 
 // 进入资源列表
@@ -66,7 +170,6 @@ const handleEnterResources = () => {
 
 <style scoped>
 .course-card {
-  cursor: pointer;
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.3s;
@@ -75,7 +178,15 @@ const handleEnterResources = () => {
   flex-direction: column;
 }
 
-.course-card:hover {
+.course-card.has-joined {
+  cursor: pointer;
+}
+
+.course-card:not(.has-joined) {
+  cursor: default;
+}
+
+.course-card.has-joined:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }

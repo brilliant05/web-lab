@@ -41,6 +41,8 @@
           v-for="course in courses"
           :key="course.courseId"
           :course="course"
+          :is-joined="enrolledCourseIds.has(course.courseId)"
+          @join-success="handleJoinSuccess"
         />
         <el-empty
           v-if="!loading && courses.length === 0"
@@ -67,11 +69,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { Search, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getCourseList } from '@/api'
+import { getCourseList, getStudentCourses } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 import CourseCard from '@/components/student/CourseCard.vue'
 
@@ -92,12 +94,37 @@ const loading = ref(false)
 // 课程列表
 const courses = ref([])
 
+// 学生已加入的课程列表
+const enrolledCourses = ref([])
+
+// 已加入课程ID集合（用于快速判断）
+const enrolledCourseIds = computed(() => {
+  return new Set(enrolledCourses.value.map(c => c.courseId))
+})
+
 // 分页配置
 const pagination = reactive({
   currentPage: 1,
   pageSize: 12,
   total: 0
 })
+
+// 加载学生已加入的课程
+const loadEnrolledCourses = async () => {
+  try {
+    const response = await getStudentCourses()
+    if (response && response.code === 200) {
+      enrolledCourses.value = response.data || []
+    }
+  } catch (error) {
+    console.error('加载已加入课程失败:', error)
+  }
+}
+
+// 加入课程成功回调
+const handleJoinSuccess = () => {
+  loadEnrolledCourses()
+}
 
 // 加载课程列表
 const loadCourses = async () => {
@@ -216,6 +243,7 @@ watch(
 // 初始化
 onMounted(() => {
   loadCourses()
+  loadEnrolledCourses()
 })
 </script>
 

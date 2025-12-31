@@ -73,7 +73,6 @@
               <el-dropdown-menu>
                 <el-dropdown-item :icon="View" @click="handleView(row)">查看详情</el-dropdown-item>
                 <el-dropdown-item :icon="List" @click="handleViewCourses(row)">查看课程</el-dropdown-item>
-                <el-dropdown-item :icon="Key" @click="handleResetPassword(row)">重置密码</el-dropdown-item>
                 <el-dropdown-item :icon="Delete" style="color: var(--el-color-danger)" divided @click="handleDeleteSingle(row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -266,13 +265,12 @@ import {
   School,
   Search,
   User,
-  View,
-  Key
+  View
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { nextTick, onMounted, reactive, ref } from 'vue'
 
-import { addTeacher, deleteTeacher, getTeacherCourses, getTeacherList, updateTeacher, updateTeacherStatus, getCourseList, resetTeacherPassword } from '@/api'
+import { addTeacher, deleteTeacher, getTeacherCourses, getTeacherList, updateTeacher, updateTeacherStatus, getCourseList } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 
 const collegeList = COLLEGE_LIST
@@ -479,23 +477,6 @@ const handleSubmit = async () => {
       }
     }
   })
-}
-
-// 重置密码
-const handleResetPassword = (row) => {
-  ElMessageBox.confirm(`确定要重置教师"${row.realName}"的密码为123456吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    try {
-      const id = row.id || row.userId
-      await resetTeacherPassword(id)
-      ElMessage.success('密码重置成功')
-    } catch (error) {
-      console.error('密码重置失败', error)
-    }
-  }).catch(() => {})
 }
 
 const handleDeleteSingle = (row) => {

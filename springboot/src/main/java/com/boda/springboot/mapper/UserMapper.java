@@ -50,6 +50,15 @@ public interface UserMapper {
     User selectByEmail(String email);
 
     /**
+     * 根据用户名查询用户信息（包括已删除的）
+     * 用于注册时检查用户名是否已被使用（包括已删除的）
+     * @param username
+     * @return
+     */
+    @Select("SELECT * FROM user WHERE username = #{username}")
+    User selectByUsernameIncludeDeleted(String username);
+
+    /**
      * 保存用户信息
      * @param user
      */

@@ -55,14 +55,33 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void saveStudent(User user) {
-        // 检查用户名是否已存在
-        if (existsByUsername(user.getUsername())) {
-            throw new ServiceException("400", "用户名已存在");
+        // 检查用户名是否已存在（包括已删除的）
+        User existingUser = userMapper.selectByUsernameIncludeDeleted(user.getUsername());
+        
+        if (existingUser != null) {
+            // 如果用户已存在但被逻辑删除，则恢复该用户
+            if (existingUser.getIsDeleted() != null && existingUser.getIsDeleted() == 1) {
+                // 恢复用户：更新密码、学号等信息，并恢复删除标记
+                existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+                existingUser.setStudentId(user.getStudentId());
+                existingUser.setIsDeleted(0); // 恢复删除标记
+                existingUser.setStatus(1); // 设置为启用状态
+                userMapper.update(existingUser);
+                return;
+            } else {
+                // 用户存在且未删除，抛出错误
+                throw new ServiceException("400", "用户名已存在");
+            }
         }
+        
+        // 新用户注册
         // 加密密码
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         // 设置角色为学生
         user.setRole(Constant.ROLE_STUDENT);
+        // 设置默认状态
+        user.setStatus(1);
+        user.setIsDeleted(0);
 
         userMapper.save(user);
     }

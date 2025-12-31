@@ -54,8 +54,11 @@
             <if test="phone != null and phone != ''">phone = #{phone},</if>
             <if test="avatarUrl != null and avatarUrl != ''">avatar_url = #{avatarUrl},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="college != null and college != ''">college = #{college},</if>
             <if test="jobTitle != null and jobTitle != ''">job_title = #{jobTitle},</if>
             <if test="profile != null and profile != ''">profile = #{profile},</if>
+            <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
             update_time = NOW()
         </set>
         WHERE user_id = #{userId}

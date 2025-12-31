@@ -127,4 +127,17 @@ public class AdminTeacherController {
         log.info("查询教师课程列表 - 教师ID: {}", teacherId);
         return Result.success(courseService.getTeacherCourses(teacherId));
     }
+
+    /**
+     * 重置教师密码
+     * @param teacherId 教师ID
+     * @return 操作结果
+     */
+    @PutMapping("/{teacherId}/password/reset")
+    @RequireRole("ADMIN")
+    public Result resetTeacherPassword(@PathVariable Long teacherId) {
+        log.info("重置教师密码 ID: {}", teacherId);
+        adminTeacherService.resetPassword(teacherId);
+        return Result.success("密码重置成功!");
+    }
 }

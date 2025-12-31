@@ -97,11 +97,6 @@ public class AdminTeacherServiceImpl implements AdminTeacherService {
             throw new RuntimeException("添加失败");
         }
 
-        // 如果有新密码，进行加密
-        if (teacher.getPassword() != null && !teacher.getPassword().trim().isEmpty()) {
-            teacher.setPassword(passwordEncoder.encode(teacher.getPassword()));
-        }
-
         // 调用 Mapper 更新
         adminTeacherMapper.updateTeacher(teacher);
     }
@@ -122,5 +117,20 @@ public class AdminTeacherServiceImpl implements AdminTeacherService {
 
         // 3. 封装分页结果
         return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    /**
+     * 重置教师密码
+     */
+    @Override
+    public void resetPassword(Long teacherId) {
+        log.info("重置教师密码，ID：{}", teacherId);
+        if (teacherId == null) {
+            throw new RuntimeException("教师ID不能为空");
+        }
+        User teacher = new User();
+        teacher.setUserId(teacherId);
+        teacher.setPassword(passwordEncoder.encode("123456"));
+        adminTeacherMapper.updateTeacher(teacher);
     }
 }

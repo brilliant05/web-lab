@@ -73,6 +73,7 @@
                 >
                   {{ row.status === 1 ? '禁用账户' : '启用账户' }}
                 </el-dropdown-item>
+                <el-dropdown-item :icon="Key" @click="handleResetPassword(row)">重置密码</el-dropdown-item>
                 <el-dropdown-item :icon="Delete" style="color: var(--el-color-danger)" divided @click="handleDeleteSingle(row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -128,11 +129,12 @@
         <el-form-item 
           label="密码" 
           prop="password"
+          v-if="formType === 'add'"
         >
           <el-input 
             v-model="formData.password" 
             type="password" 
-            placeholder="请输入密码（编辑时留空表示不修改）" 
+            placeholder="请输入密码" 
             :prefix-icon="Lock"
             show-password
           />
@@ -236,7 +238,7 @@
 </template>
 
 <script setup>
-import { addStudent, deleteStudent, getStudentList, updateStudent, updateStudentStatus, getCourseList } from '@/api'
+import { addStudent, deleteStudent, getStudentList, updateStudent, updateStudentStatus, getCourseList, resetStudentPassword } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
 import {
   ArrowDown, Delete, Edit,
@@ -248,7 +250,8 @@ import {
   School,
   Search,
   User,
-  View
+  View,
+  Key
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
@@ -466,6 +469,24 @@ const handleSubmit = async () => {
           })
       }
     }
+  })
+}
+
+// 重置密码
+const handleResetPassword = (row) => {
+  ElMessageBox.confirm(`确定要重置学生"${row.realName}"的密码为123456吗？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    const id = row.id || row.userId
+    resetStudentPassword(id).then(() => {
+      ElMessage.success('密码重置成功')
+    }).catch(error => {
+      console.error('密码重置失败', error)
+    })
+  }).catch(() => {
+    // 取消操作
   })
 }
 

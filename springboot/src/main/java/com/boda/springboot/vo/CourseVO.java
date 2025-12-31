@@ -1,65 +1,21 @@
 package com.boda.springboot.vo;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.boda.springboot.entity.Course;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
- * 课程展示 VO
- * 用于教师课程列表查询
+ * 课程视图对象
  */
 @Data
-public class CourseVO {
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class CourseVO extends Course {
     /**
-     * 课程ID
+     * 选课学生人数
      */
-    private Long courseId;
-
-    /**
-     * 课程名称
-     */
-    private String courseName;
-
-    /**
-     * 课程编号
-     */
-    private String courseCode;
-
-    /**
-     * 课程描述
-     */
-    private String description;
-
-    /**
-     * 开课学院
-     */
-    private String college;
-
-    /**
-     * 课程封面图片URL
-     */
-    private String coverImage;
-
-    /**
-     * 邀请码
-     */
-    private String inviteCode;
-
-    /**
-     * 课程状态: 0-关闭, 1-开放
-     */
-    private Integer status;
-
-    /**
-     * 创建时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private LocalDateTime createTime;
-
-    /**
-     * 学生数量
-     */
-    private Long studentCount;
+    private Integer studentCount;
 }
-

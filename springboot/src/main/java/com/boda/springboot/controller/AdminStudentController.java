@@ -125,4 +125,16 @@ public class AdminStudentController {
         return Result.success("学生信息更新成功！");
     }
 
+    /**
+     * 重置学生密码
+     * 对应API：PUT /api/v1/admin/students/{studentId}/password/reset
+     */
+    @PutMapping("/{studentId}/password/reset")
+    @RequireRole(Constant.ROLE_ADMIN)
+    public Result<String> resetStudentPassword(@PathVariable Long studentId) {
+        log.info("重置学生密码，学生ID：{}", studentId);
+        adminStudentService.resetPassword(studentId);
+        return Result.success("学生密码重置成功！");
+    }
+
 }

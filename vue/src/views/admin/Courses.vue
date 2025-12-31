@@ -309,6 +309,7 @@
 <script setup>
 import { addCourse, assignTeacher, deleteCourse, getCourseList, getCourseTeachers, getTeacherList, removeTeacher, updateCourse, uploadCourseCover } from '@/api'
 import { COLLEGE_LIST } from '@/utils/constants'
+import { fixImageUrl } from '@/utils/image'
 import { ArrowDown, Delete, Edit, List, Plus, Refresh, Search, User, View } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
@@ -476,7 +477,7 @@ const handleEdit = (row) => {
   formData.courseCode = row.courseCode || ''
   formData.college = row.college || ''
   formData.description = row.description || ''
-  formData.coverImage = row.coverImage || ''
+  formData.coverImage = fixImageUrl(row.coverImage || '')
   formData.status = row.status !== undefined ? row.status : 1
   
   dialogVisible.value = true
@@ -485,6 +486,7 @@ const handleEdit = (row) => {
 // 查看详情
 const handleView = (row) => {
   viewData.value = { ...row }
+  viewData.value.coverImage = fixImageUrl(viewData.value.coverImage)
   viewDialogVisible.value = true
 }
 
@@ -601,7 +603,8 @@ const handleCoverUpload = async (options) => {
   try {
     const response = await uploadCourseCover(uploadFormData)
     if (response && response.code === 200 && response.data) {
-      formData.coverImage = response.data.url
+      formData.coverImage = fixImageUrl(response.data.url)
+      console.log('上传封面成功:', response.data)
       ElMessage.success('封面上传成功')
     } else {
       ElMessage.error(response?.message || '封面上传失败')
@@ -889,8 +892,8 @@ const submitAssignTeacher = async () => {
 
 .cover-image {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
   display: block;
 }
 

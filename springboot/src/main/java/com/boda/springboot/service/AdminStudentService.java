@@ -30,4 +30,10 @@ public interface AdminStudentService {
      */
     void updateStudent(User student);
 
+    /**
+     * 重置学生密码
+     * @param studentId 学生ID
+     */
+    void resetPassword(Long studentId);
+
 }

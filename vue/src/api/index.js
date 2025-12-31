@@ -21,6 +21,9 @@ export const updateTeacher = (teacherId, data) =>
 export const updateTeacherStatus = (teacherId, data) =>
   http.put(`/admin/teachers/${teacherId}/status`, data)
 
+export const resetTeacherPassword = (teacherId) =>
+  http.put(`/admin/teachers/${teacherId}/password/reset`)
+
 export const deleteTeacher = (teacherId) =>
   http.delete(`/admin/teachers/${teacherId}`)
 
@@ -36,6 +39,9 @@ export const updateStudent = (studentId, data) =>
 
 export const updateStudentStatus = (studentId, data) =>
   http.put(`/admin/students/${studentId}/status`, data)
+
+export const resetStudentPassword = (studentId) =>
+  http.put(`/admin/students/${studentId}/password/reset`)
 
 export const deleteStudent = (studentId) =>
   http.delete(`/admin/students/${studentId}`)

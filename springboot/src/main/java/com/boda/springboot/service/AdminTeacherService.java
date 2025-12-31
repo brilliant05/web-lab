@@ -27,4 +27,10 @@ public interface AdminTeacherService {
      * @return 分页结果
      */
     PageResult pageQuery(TeacherPageQueryDTO teacherPageQueryDTO);
+
+    /**
+     * 重置教师密码
+     * @param teacherId 教师ID
+     */
+    void resetPassword(Long teacherId);
 }

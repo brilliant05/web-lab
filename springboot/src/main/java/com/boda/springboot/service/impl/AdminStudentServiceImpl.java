@@ -126,13 +126,24 @@ public class AdminStudentServiceImpl implements AdminStudentService {
         if (student.getUserId() == null) {
             throw new RuntimeException("学生ID不能为空");
         }
-        // 密码加密
-        if (student.getPassword() != null && !student.getPassword().trim().isEmpty()) {
-            student.setPassword(passwordEncoder.encode(student.getPassword()));
-        }
         // 确保角色为学生
         student.setRole(Constant.ROLE_STUDENT);
         // 调用Mapper更新
+        adminStudentMapper.updateStudent(student);
+    }
+
+    /**
+     * 重置学生密码
+     */
+    @Override
+    public void resetPassword(Long studentId) {
+        log.info("重置学生密码，ID：{}", studentId);
+        if (studentId == null) {
+            throw new RuntimeException("学生ID不能为空");
+        }
+        User student = new User();
+        student.setUserId(studentId);
+        student.setPassword(passwordEncoder.encode("123456"));
         adminStudentMapper.updateStudent(student);
     }
 

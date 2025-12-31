@@ -177,6 +177,9 @@ export default {
 export const getMyCourses = (params = {}) =>
   http.get('/courses/my', { params })
 
+export const updateInviteCode = (courseId, inviteCode) =>
+  http.put(`/courses/${courseId}/invite-code`, { inviteCode })
+
 export const getCourseStudents = (courseId) =>
   http.get(`/courses/${courseId}/students`)
 

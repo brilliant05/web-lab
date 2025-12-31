@@ -41,5 +41,15 @@ public interface TeacherCourseMapper {
      * 根据课程ID查询所有关联的教师ID
      */
     List<Long> selectTeacherIdsByCourseId(Long courseId);
+
+    /**
+     * 更新邀请码
+     */
+    void updateInviteCode(@Param("teacherId") Long teacherId, @Param("courseId") Long courseId, @Param("inviteCode") String inviteCode);
+
+    /**
+     * 根据邀请码查询关联信息
+     */
+    TeacherCourse selectByInviteCode(String inviteCode);
 }
 

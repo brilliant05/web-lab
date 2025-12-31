@@ -52,6 +52,11 @@ public class Course implements Serializable {
     private String coverImage;
 
     /**
+     * 邀请码（仅在特定查询中返回）
+     */
+    private String inviteCode;
+
+    /**
      * 课程状态: 0-关闭, 1-开放
      */
     private Integer status;
@@ -74,7 +79,7 @@ public class Course implements Serializable {
     private Integer isDeleted;
 
     /**
-     * 邀请码（非数据库字段，仅在查询教师课程时使用）
+     * 授课教师姓名（非数据库字段，用于展示）
      */
-    private String inviteCode;
+    private String teacherName;
 }

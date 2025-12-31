@@ -20,16 +20,45 @@
             </el-tag>
           </div>
           <p class="course-desc">{{ courseInfo.description || '暂无描述' }}</p>
-          <div class="invite-code" v-if="courseInfo.inviteCode">
+          <div class="invite-code">
             <span>邀请码：</span>
-            <el-tag type="warning" effect="plain" class="code-tag">
+            <el-tag v-if="courseInfo.inviteCode" type="warning" effect="plain" class="code-tag">
               {{ courseInfo.inviteCode }}
             </el-tag>
-            <el-button link type="primary" size="small" @click="copyInviteCode">复制</el-button>
+            <span v-else class="no-code" style="color: #909399; font-size: 14px; margin-right: 8px;">未设置</span>
+            <el-button v-if="courseInfo.inviteCode" link type="primary" size="small" @click="copyInviteCode">复制</el-button>
+            <el-button link type="primary" size="small" @click="handleEditInviteCode">设置</el-button>
           </div>
         </div>
       </div>
     </el-card>
+
+    <!-- 邀请码设置对话框 -->
+    <el-dialog
+      v-model="inviteCodeDialogVisible"
+      title="设置邀请码"
+      width="400px"
+    >
+      <el-form 
+        ref="inviteCodeFormRef"
+        :model="inviteCodeForm" 
+        :rules="inviteCodeRules"
+        label-width="80px"
+      >
+        <el-form-item label="邀请码" prop="code">
+          <el-input v-model="inviteCodeForm.code" placeholder="请输入6-20位纯数字邀请码" maxlength="20" show-word-limit />
+          <div style="font-size: 12px; color: #909399; margin-top: 4px;">
+            学生可通过此邀请码加入课程
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="inviteCodeDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="saveInviteCode" :loading="savingInviteCode">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 主要内容区域 -->
     <el-card class="main-content" shadow="never">
@@ -182,7 +211,8 @@ import {
     getCourseById,
     getCourseStudents,
     getQuestionList,
-    getResourceList
+    getResourceList,
+    updateInviteCode
 } from '@/api'
 import CourseCover from '@/components/CourseCover.vue'
 import { Clock, Refresh, Search, Upload, User, View } from '@element-plus/icons-vue'
@@ -197,6 +227,52 @@ const courseId = route.params.id
 // 课程信息
 const courseInfo = ref({})
 const courseLoading = ref(false)
+
+// 邀请码相关
+const inviteCodeDialogVisible = ref(false)
+const savingInviteCode = ref(false)
+const inviteCodeFormRef = ref(null)
+const inviteCodeForm = reactive({
+  code: ''
+})
+
+const inviteCodeRules = {
+  code: [
+    { required: true, message: '请输入邀请码', trigger: 'blur' },
+    { pattern: /^\d{6,20}$/, message: '邀请码必须为6到20位的纯数字组合', trigger: 'blur' }
+  ]
+}
+
+const handleEditInviteCode = () => {
+  inviteCodeForm.code = courseInfo.value.inviteCode || ''
+  inviteCodeDialogVisible.value = true
+  // 重置校验状态
+  if (inviteCodeFormRef.value) {
+    inviteCodeFormRef.value.clearValidate()
+  }
+}
+
+const saveInviteCode = async () => {
+  if (!inviteCodeFormRef.value) return
+  
+  await inviteCodeFormRef.value.validate(async (valid) => {
+    if (valid) {
+      savingInviteCode.value = true
+      try {
+        await updateInviteCode(courseId, inviteCodeForm.code)
+        ElMessage.success('邀请码设置成功')
+        inviteCodeDialogVisible.value = false
+        // Reload course info to update display
+        loadCourseInfo()
+      } catch (error) {
+        console.error('设置邀请码失败', error)
+        // 错误信息已由拦截器处理，这里不再重复弹窗
+      } finally {
+        savingInviteCode.value = false
+      }
+    }
+  })
+}
 
 // 标签页
 const activeTab = ref('students')

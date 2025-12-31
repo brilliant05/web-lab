@@ -25,7 +25,7 @@
 
     <!-- 检查教师是否已关联课程 -->
     <select id="selectByTeacherAndCourse" resultType="com.boda.springboot.entity.TeacherCourse">
-        SELECT id, teacher_id, course_id, assign_time
+        SELECT id, teacher_id, course_id, assign_time, invite_code, invite_code_expire_time
         FROM teacher_course
         WHERE teacher_id = #{teacherId}
           AND course_id = #{courseId}
@@ -43,6 +43,21 @@
         SELECT teacher_id
         FROM teacher_course
         WHERE course_id = #{courseId}
+    </select>
+
+    <!-- 更新邀请码 -->
+    <update id="updateInviteCode">
+        UPDATE teacher_course
+        SET invite_code = #{inviteCode}
+        WHERE teacher_id = #{teacherId}
+          AND course_id = #{courseId}
+    </update>
+
+    <!-- 根据邀请码查询关联信息 -->
+    <select id="selectByInviteCode" resultType="com.boda.springboot.entity.TeacherCourse">
+        SELECT id, teacher_id, course_id, assign_time, invite_code, invite_code_expire_time
+        FROM teacher_course
+        WHERE invite_code = #{inviteCode}
     </select>
 
 </mapper>

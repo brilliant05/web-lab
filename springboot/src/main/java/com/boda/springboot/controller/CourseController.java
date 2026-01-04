@@ -233,11 +233,11 @@ public class CourseController {
     }
 
     /**
-     * 获取课程的教师列表（管理员）
+     * 获取课程的教师列表（管理员、学生）
      * GET /courses/1/teachers
      */
     @GetMapping("/{courseId}/teachers")
-    @RequireRole(Constant.ROLE_ADMIN)
+    @RequireRole({Constant.ROLE_ADMIN, Constant.ROLE_STUDENT})
     public Result<List<User>> getCourseTeachers(@PathVariable Long courseId) {
         log.info("接收到查询课程教师列表请求 - 课程ID: {}", courseId);
         List<User> teachers = courseService.getCourseTeachers(courseId);

@@ -40,22 +40,21 @@
         <el-form-item label="被提问教师" prop="teacherId">
           <el-select
             v-model="formData.teacherId"
-            placeholder="请选择教师（暂时需手动输入教师ID）"
+            placeholder="请选择教师"
             filterable
-            allow-create
-            default-first-option
             style="width: 100%"
             :loading="teachersLoading"
+            :disabled="!formData.courseId"
           >
             <el-option
               v-for="teacher in teachers"
               :key="teacher.userId"
-              :label="`${teacher.realName} (${teacher.jobTitle || ''})`"
+              :label="`${teacher.realName} (${teacher.jobTitle || '教师'})`"
               :value="teacher.userId"
             />
           </el-select>
-          <div class="form-tip">
-            提示：暂时需要手动输入教师ID，或从下拉列表选择（如果有数据）
+          <div class="form-tip" v-if="!formData.courseId">
+            请先选择课程
           </div>
         </el-form-item>
 
@@ -124,7 +123,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { submitQuestion, getStudentCourses } from '@/api'
+import { submitQuestion, getStudentCourses, getCourseTeachers } from '@/api'
 
 const router = useRouter()
 
@@ -178,17 +177,31 @@ const loadCourses = async () => {
   }
 }
 
-// 加载教师列表（暂时为空，因为后端可能没有学生可访问的接口）
+// 加载教师列表
 const loadTeachers = async () => {
-  // TODO: 如果后端有学生可访问的教师列表接口，在这里调用
-  // 暂时留空，使用allow-create让用户手动输入
+  // 初始不加载，等待选择课程
   teachers.value = []
 }
 
-// 课程改变时的处理（如果后续需要根据课程筛选教师，可以在这里实现）
-const handleCourseChange = (courseId) => {
-  // TODO: 如果后端有根据课程获取教师列表的接口，在这里调用
-  console.log('课程已选择:', courseId)
+// 课程改变时的处理
+const handleCourseChange = async (courseId) => {
+  formData.teacherId = null
+  teachers.value = []
+  
+  if (!courseId) return
+
+  teachersLoading.value = true
+  try {
+    const response = await getCourseTeachers(courseId)
+    if (response && response.code === 200 && response.data) {
+      teachers.value = response.data
+    }
+  } catch (error) {
+    console.error('加载教师列表失败:', error)
+    ElMessage.error('加载教师列表失败')
+  } finally {
+    teachersLoading.value = false
+  }
 }
 
 // 文件超出限制

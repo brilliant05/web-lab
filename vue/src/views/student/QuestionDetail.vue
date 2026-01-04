@@ -157,6 +157,44 @@
         </div>
       </div>
     </el-card>
+
+    <!-- 编辑问题对话框 -->
+    <el-dialog
+      v-model="editDialogVisible"
+      title="编辑问题"
+      width="50%"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="editFormRef"
+        :model="editForm"
+        :rules="editRules"
+        label-width="80px"
+      >
+        <el-form-item label="标题" prop="questionTitle">
+          <el-input v-model="editForm.questionTitle" placeholder="请输入问题标题" />
+        </el-form-item>
+        <el-form-item label="内容" prop="questionContent">
+          <el-input
+            v-model="editForm.questionContent"
+            type="textarea"
+            :rows="6"
+            placeholder="请输入问题详细内容"
+          />
+        </el-form-item>
+        <el-form-item label="标签" prop="tags">
+          <el-input v-model="editForm.tags" placeholder="多个标签请用逗号分隔" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEdit" :loading="submitting">
+            保存
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -169,7 +207,8 @@ import {
   getQuestionDetail,
   deleteQuestion,
   likeAnswer,
-  unlikeAnswer
+  unlikeAnswer,
+  updateQuestion
 } from '@/api'
 
 const route = useRoute()
@@ -180,6 +219,26 @@ const currentUserId = ref(null)
 
 // 问题数据
 const question = ref({})
+
+// 编辑相关
+const editDialogVisible = ref(false)
+const submitting = ref(false)
+const editFormRef = ref(null)
+const editForm = ref({
+  questionTitle: '',
+  questionContent: '',
+  tags: ''
+})
+
+const editRules = {
+  questionTitle: [
+    { required: true, message: '请输入问题标题', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  questionContent: [
+    { required: true, message: '请输入问题内容', trigger: 'blur' }
+  ]
+}
 
 // 从localStorage获取当前用户ID
 const userInfo = localStorage.getItem('userInfo')
@@ -255,8 +314,36 @@ const formatDateTime = (timeStr) => {
 
 // 编辑问题
 const handleEditQuestion = () => {
-  // TODO: 跳转到编辑页面或显示编辑对话框
-  ElMessage.info('编辑功能待实现')
+  editForm.value = {
+    questionTitle: question.value.questionTitle,
+    questionContent: question.value.questionContent,
+    tags: question.value.tags
+  }
+  editDialogVisible.value = true
+}
+
+// 提交编辑
+const submitEdit = async () => {
+  if (!editFormRef.value) return
+  
+  await editFormRef.value.validate(async (valid) => {
+    if (valid) {
+      submitting.value = true
+      try {
+        const questionId = route.params.id
+        await updateQuestion(questionId, editForm.value)
+        ElMessage.success('修改成功')
+        editDialogVisible.value = false
+        // 重新加载详情
+        loadQuestionDetail()
+      } catch (error) {
+        console.error('修改问题失败:', error)
+        ElMessage.error(error?.response?.data?.message || '修改失败')
+      } finally {
+        submitting.value = false
+      }
+    }
+  })
 }
 
 // 删除问题

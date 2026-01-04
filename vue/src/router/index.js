@@ -53,6 +53,12 @@ const routes = [
         meta: { title: '问答管理' }
       },
       {
+        path: 'questions/:id',
+        name: 'AdminQuestionDetail',
+        component: () => import('../views/admin/QuestionDetail.vue'),
+        meta: { title: '问题详情' }
+      },
+      {
         path: 'notifications',
         name: 'Notifications',
         component: () => import('../views/admin/Notifications.vue'),

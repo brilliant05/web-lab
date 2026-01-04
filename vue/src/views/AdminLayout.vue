@@ -62,8 +62,6 @@ const breadcrumbs = computed(() => {
   background-color: #f5f7fa;
   padding: 20px;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
 }
 
 /* 面包屑容器 */

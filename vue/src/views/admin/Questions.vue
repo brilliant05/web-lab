@@ -72,7 +72,10 @@
 import { ArrowDown, Delete, Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { getQuestionList, deleteQuestion } from '@/api'
+
+const router = useRouter()
 
 const searchKeyword = ref('')
 const loading = ref(false)
@@ -113,7 +116,7 @@ const handleBatchDelete = () => {
 }
 
 const handleView = (row) => {
-  ElMessage.info(`查看问题详情：${row.title}`)
+  router.push(`/admin/questions/${row.questionId}`)
 }
 
 const handleDeleteSingle = (row) => {

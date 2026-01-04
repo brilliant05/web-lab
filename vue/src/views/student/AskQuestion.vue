@@ -124,7 +124,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { submitQuestion, getCourseList } from '@/api'
+import { submitQuestion, getStudentCourses } from '@/api'
 
 const router = useRouter()
 
@@ -167,9 +167,9 @@ const formRules = {
 const loadCourses = async () => {
   coursesLoading.value = true
   try {
-    const response = await getCourseList({ pageNum: 1, pageSize: 100, status: 1 })
+    const response = await getStudentCourses()
     if (response && response.code === 200 && response.data) {
-      courses.value = response.data.records || []
+      courses.value = response.data || []
     }
   } catch (error) {
     console.error('加载课程列表失败:', error)

@@ -77,6 +77,6 @@ knife4j:
 qiniu:
   access-key: 99penKAHZrNem2u0Kj4IeBWtX_pa_oMfwYBs-TAs    # 替换为您的 AccessKey
   secret-key: nGDvpf785zK6rSp40rP35Q7lV8jB9Oj5QALZ8FBt     # 替换为您的 SecretKey
-  bucket: test-web-lab           # 替换为您的存储空间名称
-  domain: http://t847w6hd5.hd-bkt.clouddn.com      # 替换为您的 CDN 加速域名（带 http:// 或 https://）
-  zone: z0                              # 存储区域: z0-华东, z1-华北, z2-华南, na0-北美, as0-东南亚
+  bucket: web-lab-test           # 替换为您的存储空间名称
+  domain: http://t8ee700ji.sabkt.gdipper.com     # 替换为您的 CDN 加速域名（带 http:// 或 https://）
+  zone: as0                              # 存储区域: z0-华东, z1-华北, z2-华南, na0-北美, as0-东南亚
